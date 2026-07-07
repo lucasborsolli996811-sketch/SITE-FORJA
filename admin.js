@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loggedInView = document.getElementById('sidebar-logged-in-view');
 
         if (loggedIn === 'true') {
+            document.body.classList.add('logged-in-admin');
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadToolsSelect();
             initBudgetGenerator();
         } else {
+            document.body.classList.remove('logged-in-admin');
             document.getElementById('login-view').style.display = 'block';
             document.getElementById('dashboard-view').style.display = 'none';
             
@@ -961,6 +963,23 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     };
+
+    // --- Mobile PDF Toggle ---
+    const openMobilePdfBtn = document.getElementById('open-mobile-pdf-btn');
+    const closeMobilePdfBtn = document.getElementById('close-mobile-pdf-btn');
+    const adminSidebar = document.getElementById('admin-sidebar');
+
+    if (openMobilePdfBtn && adminSidebar) {
+        openMobilePdfBtn.addEventListener('click', () => {
+            adminSidebar.classList.add('active-mobile-pdf');
+        });
+    }
+
+    if (closeMobilePdfBtn && adminSidebar) {
+        closeMobilePdfBtn.addEventListener('click', () => {
+            adminSidebar.classList.remove('active-mobile-pdf');
+        });
+    }
 
     // Run auth check
     checkAuth();

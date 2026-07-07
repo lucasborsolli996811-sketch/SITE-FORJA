@@ -2348,4 +2348,107 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* ====================================
+   MOBILE ADMIN PREVIEW FLOATING BUTTON & OVERLAY
+   ================================= */
+.floating-pdf-btn {
+    display: none;
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    box-shadow: 0 10px 25px rgba(249, 115, 22, 0.4);
+    z-index: 9999;
+    cursor: pointer;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.floating-pdf-btn i {
+    font-size: 1.1rem;
+}
+
+.floating-pdf-btn:hover {
+    background: var(--accent-light);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(249, 115, 22, 0.5);
+}
+
+@media (max-width: 992px) {
+    /* Hide the admin sidebar entirely on mobile/tablet by default */
+    #admin-sidebar {
+        display: none !important;
+    }
+    
+    /* Make the content wrapper take up full width on mobile/tablet */
+    .main-content-wrapper {
+        margin-left: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    /* Show the floating button when user is logged in as admin */
+    body.logged-in-admin .floating-pdf-btn {
+        display: flex !important;
+    }
+    
+    /* When active, show the sidebar as a full screen overlay */
+    #admin-sidebar.active-mobile-pdf {
+        display: flex !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99999 !important;
+        background: rgba(10, 10, 15, 0.98) !important;
+        padding: 5rem 1rem 2rem !important; /* pad from the header */
+        overflow-y: auto !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        transform: none !important;
+    }
+    
+    /* Show the close button on mobile inside the overlay */
+    #admin-sidebar.active-mobile-pdf .mobile-pdf-close-btn {
+        display: flex !important;
+    }
+    
+    /* Ensure PDF Sheet fits nicely inside full screen mobile view */
+    #admin-sidebar.active-mobile-pdf .pdf-container {
+        width: 100% !important;
+        max-width: 600px !important;
+    }
+    
+    #admin-sidebar.active-mobile-pdf .pdf-sheet {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 800px !important;
+        padding: 1.5rem !important;
+        font-size: 0.7rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Form fields stack vertically in two-column rows to prevent squishing */
+    .form-group-row {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Action buttons in budget generator stack vertically on mobile */
+    .cart-actions-container {
+        flex-direction: column !important;
+    }
+}
+
+
 

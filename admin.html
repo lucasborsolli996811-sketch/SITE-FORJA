@@ -22,6 +22,11 @@
         
         <!-- Logged In View: PDF Sheet Preview -->
         <div class="sidebar-logged-in" id="sidebar-logged-in-view" style="display:none;">
+            <!-- Botão de Fechar PDF no Celular -->
+            <button class="btn btn-ghost mobile-pdf-close-btn" id="close-mobile-pdf-btn" style="display: none; margin-bottom: 1.5rem; width: 100%; justify-content: center; border-color: var(--border); background: var(--bg-card); color: var(--text-primary); padding: 0.75rem;">
+                <i class="fa-solid fa-xmark" style="margin-right: 0.5rem;"></i>
+                <span>Fechar Visualização</span>
+            </button>
             <div class="pdf-container">
                 <div class="pdf-sheet" id="invoice-pdf">
                     <!-- PDF Header -->
@@ -522,6 +527,12 @@
         </section>
 
     </div>
+
+    <!-- Floating PDF View Button for Mobile -->
+    <button class="floating-pdf-btn" id="open-mobile-pdf-btn">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span>Ver PDF</span>
+    </button>
 
     <!-- Scripts -->
     <script src="script.js"></script>
