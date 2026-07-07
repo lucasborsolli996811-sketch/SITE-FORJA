@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Restrito - Estoque & Orçamentos | Forja</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- ===== LOGO GIGANTE / PDF PREVIEW FIXA NA ESQUERDA ===== -->
+    <div class="fixed-giant-logo" id="admin-sidebar">
+        <!-- Logged Out View -->
+        <div class="sidebar-logged-out" id="sidebar-logged-out-view">
+            <div class="fixed-logo-glow"></div>
+            <img src="Imagem/IMG_6574.PNG" alt="Símbolo Forja" class="giant-logo-img">
+        </div>
+        
+        <!-- Logged In View: PDF Sheet Preview -->
+        <div class="sidebar-logged-in" id="sidebar-logged-in-view" style="display:none;">
+            <div class="pdf-container">
+                <div class="pdf-sheet" id="invoice-pdf">
+                    <!-- PDF Header -->
+                    <div class="pdf-header">
+                        <div class="pdf-header-left">
+                            <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="pdf-logo">
+                            <span class="pdf-brand-title">Forja</span>
+                        </div>
+                        <div class="pdf-header-right">
+                            <div>@_Forja_3D</div>
+                            <div>Forja3dprojetos@gmail.com</div>
+                            <div>(14) 99681-1628</div>
+                        </div>
+                    </div>
+                    
+                    <h2 class="pdf-main-title">ORÇAMENTO PROJETO E IMPRESSÃO 3D</h2>
+                    
+                    <!-- PDF Metadata -->
+                    <div class="pdf-meta-section">
+                        <div class="pdf-meta-row"><strong>Cliente:</strong> <span id="pdf-client-name">NENHUM SELECIONADO</span></div>
+                        <div class="pdf-meta-row"><strong>Produto:</strong> <span id="pdf-product-category">TOOLS</span></div>
+                        <div class="pdf-meta-grid" style="display: grid; grid-template-columns: 1fr 1fr; margin-top:0.3rem;">
+                            <div><strong>Nº Orçamento:</strong> <span id="pdf-budget-num">12001</span></div>
+                            <div><strong>Data Orçamento:</strong> <span id="pdf-budget-date">01/07/2026</span></div>
+                        </div>
+                        <div class="pdf-meta-row" style="margin-top:0.3rem;"><strong>Data de Entrega:</strong> <span id="pdf-delivery-date">A combinar</span></div>
+                    </div>
+                    
+                    <!-- PDF Items Table -->
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th>SERVIÇO</th>
+                                <th style="text-align:center;">IMPRESSÃO 3D</th>
+                                <th style="text-align:center;">PROJETO</th>
+                                <th style="text-align:center;">TOOLS</th>
+                                <th style="text-align:right;">TOTAL (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdf-items-tbody">
+                            <!-- Dynamic items -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" style="text-align:right; font-weight:bold; padding-right:1rem;">TOTAL</td>
+                                <td id="pdf-total-val" style="text-align:right; font-weight:bold; color:var(--accent);">R$ 0,00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    
+                    <!-- PDF Description / Remarks -->
+                    <div class="pdf-description-section">
+                        <h4 style="margin-bottom:0.25rem;">Descrição</h4>
+                        <p id="pdf-desc-text" style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4; white-space: pre-wrap;">[Insira a descrição geral do escopo do orçamento]</p>
+                        <h4 style="margin-top:0.75rem; margin-bottom:0.25rem;">Observação adicionais:</h4>
+                        <p id="pdf-obs-text" style="font-size:0.7rem; color:var(--text-muted); line-height:1.4; white-space: pre-wrap;">Nenhuma</p>
+                    </div>
+                    
+                    <!-- PDF Footer (Terms) -->
+                    <div class="pdf-terms">
+                        <div class="pdf-terms-block">
+                            <strong>Orçamento:</strong>
+                            <p>válido por 7 dias • Valores sujeitos a alteração conforme alterações no projeto</p>
+                        </div>
+                        <div class="pdf-terms-block">
+                            <strong>Entrega:</strong>
+                            <p>* IMPRESSÃO 3D: 10 ( dez ) dias úteis, condicionado ao volume da demanda produzida.</p>
+                            <p>* PROJETOS: 10 ( dez ) dias úteis, condicionado ao volume da demanda produzida.</p>
+                            <p>* TOOLS: 15 (quinze) dias úteis, variando do estoque disponível.</p>
+                        </div>
+                        <div class="pdf-terms-block">
+                            <strong>Pagamento:</strong>
+                            <p>Valores acima de R$2.000,00 podem ser parcelados: • Boleto (3x) | • Cartão de Crédito (3x sem juros) ou 10x com juros</p>
+                            <p>• Pix 67.723.944/001-68 — CNPJ — Nubank — Lucas Borsolli</p>
+                        </div>
+                        <div class="pdf-terms-block">
+                            <strong>Formas de Pagamento Impressão 3D:</strong>
+                            <p>• Pix 67.723.944/001-68 — CNPJ — Nubank — Lucas Borsolli</p>
+                            <p>• 50% do valor antecipado para início da produção e 50% no momento da entrega.</p>
+                            <p>• Cartão de Crédito: Para valores acima de R$60,00, é possível parcelar em até 3x sem juros.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="header" id="header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="Forja - Página Inicial">
+                <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="logo-img">
+                <span class="logo-text">FORJA</span>
+            </a>
+            <nav class="nav" id="nav" aria-label="Menu principal">
+                <ul>
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="ferramenta.html" class="nav-link">Ferramentas</a></li>
+                    <li><a href="admin.html" class="nav-link active cta-link">Acesso</a></li>
+                </ul>
+            </nav>
+            <button class="mobile-toggle" id="mobile-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="main-content-wrapper">
+        
+        <!-- ===== LOGIN VIEW ===== -->
+        <section class="admin-login-section section-padding" id="login-view">
+            <div class="container">
+                <div class="admin-login-card">
+                    <div class="login-header">
+                        <i class="fa-solid fa-lock"></i>
+                        <h2>Painel Administrativo</h2>
+                        <p>Entre com suas credenciais de acesso para gerenciar a empresa.</p>
+                    </div>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label for="username">Usuário</label>
+                            <input type="text" id="username" placeholder="Digite seu usuário" required autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Senha</label>
+                            <input type="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <span>Entrar</span>
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                        </button>
+                        <p id="login-error" class="login-error-msg" style="display:none; color:#ef4444; font-size:0.85rem; text-align:center; margin-top:1rem;"></p>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== DASHBOARD VIEW (LOGGED IN) ===== -->
+        <section class="admin-dashboard-section section-padding" id="dashboard-view" style="display:none;">
+            <div class="container">
+                <div class="dashboard-header-block">
+                    <div>
+                        <span class="section-tag">Painel de Controle</span>
+                        <h1 class="dashboard-title">Sistema de <span class="accent">Gestão Forja</span></h1>
+                    </div>
+                    <button class="btn btn-ghost" id="logout-btn">
+                        <span>Sair</span>
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+
+                <!-- TABS NAVIGATION -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="tab-estoque">
+                        <i class="fa-solid fa-boxes-stacked"></i> Estoque & Dashboard
+                    </button>
+                    <button class="tab-btn" data-tab="tab-clientes">
+                        <i class="fa-solid fa-users"></i> Clientes
+                    </button>
+                    <button class="tab-btn" data-tab="tab-gerador">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Gerador de Orçamento
+                    </button>
+                    <button class="tab-btn" data-tab="tab-historico">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Histórico
+                    </button>
+                </div>
+
+                <!-- TAB CONTENT: ESTOQUE & DASHBOARD -->
+                <div class="tab-content active" id="tab-estoque">
+                    <!-- Metrics Cards -->
+                    <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+                        <div class="metric-card" style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md);">
+                            <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Gasto em Compras</span>
+                            <h2 id="metric-spent" style="font-size:1.8rem; margin-top:0.5rem; color:var(--text-primary);">R$ 0,00</h2>
+                        </div>
+                        <div class="metric-card" style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md);">
+                            <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Faturamento Total</span>
+                            <h2 id="metric-revenue" style="font-size:1.8rem; margin-top:0.5rem; color:#25d366;">R$ 0,00</h2>
+                        </div>
+                        <div class="metric-card" style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md);">
+                            <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Lucro nas Vendas</span>
+                            <h2 id="metric-profit" style="font-size:1.8rem; margin-top:0.5rem; color:var(--accent-light);">R$ 0,00</h2>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Tables -->
+                    <div class="analytics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 2.5rem;">
+                        <div class="dashboard-panel-card">
+                            <h3>Ferramentas Mais Vendidas</h3>
+                            <div style="margin-top: 1.5rem;">
+                                <table class="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th style="text-align:right;">Vendidos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="top-sold-list">
+                                        <!-- Dynamic -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="dashboard-panel-card">
+                            <h3>Ferramentas Mais Orçadas (Site)</h3>
+                            <div style="margin-top: 1.5rem;">
+                                <table class="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th style="text-align:right;">Orçados (Cliques)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="top-quoted-list">
+                                        <!-- Dynamic -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estoque Grid -->
+                    <div class="dashboard-grid">
+                        <!-- Form Cadastro -->
+                        <div class="dashboard-panel-card">
+                            <h3>Cadastrar Nova Ferramenta</h3>
+                            <form id="add-product-form" style="margin-top:1.5rem;">
+                                <div class="form-group">
+                                    <label for="prod-brand">Marca</label>
+                                    <input type="text" id="prod-brand" placeholder="Ex: DESKAR, SANDVIK" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-name">Nome do Produto</label>
+                                    <input type="text" id="prod-name" placeholder="Ex: Pastilha TNMG" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-desc">Descrição</label>
+                                    <textarea id="prod-desc" rows="3" placeholder="Detalhes técnicos da ferramenta..." required></textarea>
+                                </div>
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="prod-stock">Estoque Inicial</label>
+                                        <input type="number" id="prod-stock" min="0" value="1" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-buy-link">Link de Compra</label>
+                                        <input type="url" id="prod-buy-link" placeholder="Ex: https://fornecedor.com">
+                                    </div>
+                                </div>
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="prod-buy-price">Valor de Compra (R$)</label>
+                                        <input type="number" id="prod-buy-price" min="0" step="0.01" value="0.00" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prod-sell-price">Valor de Venda (R$)</label>
+                                        <input type="number" id="prod-sell-price" min="0" step="0.01" value="0.00" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prod-img">Link da Imagem do Produto (Opcional)</label>
+                                    <input type="url" id="prod-img" placeholder="http://exemplo.com/imagem.jpg">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-full">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>Cadastrar Produto</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Lista de Estoque -->
+                        <div class="dashboard-panel-card list-panel">
+                            <h3>Itens Cadastrados no Estoque</h3>
+                            <div class="inventory-table-wrap" style="margin-top:1.5rem;">
+                                <table class="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Marca</th>
+                                            <th>Produto</th>
+                                            <th style="text-align:center;">Estoque</th>
+                                            <th style="text-align:right;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventory-list-tbody">
+                                        <!-- Dynamic rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: CLIENTES -->
+                <div class="tab-content" id="tab-clientes">
+                    <div class="dashboard-grid">
+                        <!-- Form Cadastro Cliente -->
+                        <div class="dashboard-panel-card">
+                            <h3>Cadastrar Novo Cliente</h3>
+                            <form id="add-client-form" style="margin-top:1.5rem;">
+                                <div class="form-group">
+                                    <label for="client-name-input">Nome / Razão Social</label>
+                                    <input type="text" id="client-name-input" placeholder="Ex: Stema Usinagem" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-address-input">Endereço Completo</label>
+                                    <input type="text" id="client-address-input" placeholder="Ex: Rua A, 123 - Centro" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-email-input">E-mail</label>
+                                    <input type="email" id="client-email-input" placeholder="Ex: contato@empresa.com" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="client-phone-input">Telefone / WhatsApp</label>
+                                    <input type="text" id="client-phone-input" placeholder="Ex: (14) 99999-9999" required>
+                                </div>
+                                <div class="form-actions" style="display: flex; gap: 0.5rem; flex-direction: column;">
+                                    <button type="submit" class="btn btn-primary btn-full" id="client-submit-btn">
+                                        <i class="fa-solid fa-user-plus"></i>
+                                        <span>Cadastrar Cliente</span>
+                                    </button>
+                                    <button type="button" class="btn btn-ghost btn-full" id="client-cancel-edit-btn" style="display: none; border-color: #ef4444; color: #ef4444; background: transparent; margin-top: 0.5rem;">
+                                        <i class="fa-solid fa-xmark"></i>
+                                        <span>Cancelar Edição</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Lista de Clientes -->
+                        <div class="dashboard-panel-card list-panel">
+                            <h3>Clientes Cadastrados</h3>
+                            <div class="inventory-table-wrap" style="margin-top:1.5rem;">
+                                <table class="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Contato</th>
+                                            <th style="text-align:right;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clients-list-tbody">
+                                        <!-- Dynamic clients -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: GERADOR DE ORÇAMENTO -->
+                <div class="tab-content" id="tab-gerador">
+                    <div class="dashboard-grid">
+                        <!-- Painel Configuração Geral -->
+                        <div class="dashboard-panel-card">
+                            <h3>Dados do Orçamento</h3>
+                            <form id="budget-meta-form" style="margin-top:1.5rem;">
+                                <div class="form-group">
+                                    <label for="budget-client-select">Selecionar Cliente</label>
+                                    <select id="budget-client-select" required>
+                                        <option value="" disabled selected>Selecione um cliente...</option>
+                                        <!-- Populate dynamically -->
+                                    </select>
+                                </div>
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="budget-number-input">Nº Orçamento</label>
+                                        <input type="text" id="budget-number-input" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="budget-date-input">Data de Emissão</label>
+                                        <input type="date" id="budget-date-input" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="budget-delivery-input">Previsão de Entrega</label>
+                                    <input type="text" id="budget-delivery-input" placeholder="Ex: Entre 10/07 a 20/07" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="budget-desc-input">Descrição Geral do Escopo</label>
+                                    <textarea id="budget-desc-input" rows="2" placeholder="Ex: Fornecimento de ferramentas e pastilhas de usinagem."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="budget-obs-input">Observações Adicionais</label>
+                                    <textarea id="budget-obs-input" rows="2" placeholder="Ex: Frete incluso / Retirada sob responsabilidade do cliente."></textarea>
+                                </div>
+                                
+                                <div class="cart-actions-container" style="display: flex; gap: 0.75rem; margin-top:2rem;">
+                                    <button type="button" class="btn btn-primary" id="btn-save-budget" style="flex:1;">
+                                        <i class="fa-solid fa-floppy-disk"></i> Salvar no Histórico
+                                    </button>
+                                    <button type="button" class="btn btn-ghost" id="btn-print-pdf">
+                                        <i class="fa-solid fa-print"></i> Gerar PDF / Imprimir
+                                    </button>
+                                </div>
+                                <div style="margin-top:0.75rem; text-align:center;">
+                                    <button type="button" class="btn-item-remove" id="btn-clear-budget" style="background:none; border:none; cursor:pointer; font-size:0.85rem;">
+                                        <i class="fa-solid fa-rotate-left"></i> Limpar Orçamento Atual
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Painel Inserir Itens -->
+                        <div class="dashboard-panel-card">
+                            <h3>Adicionar Itens ao Orçamento</h3>
+                            <form id="add-item-budget-form" style="margin-top:1.5rem;">
+                                <div class="form-group">
+                                    <label for="budget-item-type">Tipo de Serviço</label>
+                                    <select id="budget-item-type" required>
+                                        <option value="tools">TOOLS (Ferramentas)</option>
+                                        <option value="impressao">IMPRESSÃO 3D</option>
+                                        <option value="projeto">PROJETO</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Select tool from database (Only shown if Type is tools) -->
+                                <div class="form-group" id="stock-tool-select-wrapper">
+                                    <label for="budget-tool-select">Produto do Estoque (Opcional)</label>
+                                    <select id="budget-tool-select">
+                                        <option value="" selected>-- Digitar item manualmente --</option>
+                                        <!-- Populate dynamically -->
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="budget-item-name">Nome do Serviço / Item</label>
+                                    <input type="text" id="budget-item-name" placeholder="Ex: SPMX07T308 YG02" required>
+                                </div>
+
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="budget-item-qty">Quantidade</label>
+                                        <input type="number" id="budget-item-qty" min="1" value="1" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="budget-item-val">Valor Unitário (R$)</label>
+                                        <input type="number" id="budget-item-val" min="0" step="0.01" value="0.00" required>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-ghost btn-full" style="border-color:var(--accent); color:var(--text-primary); background: transparent;">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>Adicionar Item ao PDF</span>
+                                </button>
+                            </form>
+
+                            <!-- Mini tabela de itens inseridos para controle no painel -->
+                            <div style="margin-top:2rem;">
+                                <h4>Itens Inseridos</h4>
+                                <div class="inventory-table-wrap" style="margin-top:1rem; max-height: 250px; overflow-y:auto;">
+                                    <table class="inventory-table" style="font-size:0.85rem;">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th style="text-align:center;">Qtd</th>
+                                                <th style="text-align:right;">Subtotal</th>
+                                                <th style="text-align:right;">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="budget-items-control-tbody">
+                                            <!-- Dynamic items control -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: HISTÓRICO DE ORÇAMENTOS -->
+                <div class="tab-content" id="tab-historico">
+                    <div class="dashboard-panel-card">
+                        <h3>Histórico de Orçamentos Gerados</h3>
+                        <div class="inventory-table-wrap" style="margin-top:1.5rem;">
+                            <table class="inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nº Orçamento</th>
+                                        <th>Cliente</th>
+                                        <th>Data</th>
+                                        <th style="text-align:right;">Valor Total</th>
+                                        <th style="text-align:center;">Status</th>
+                                        <th style="text-align:right;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="budget-history-tbody">
+                                    <!-- Dynamic budgets list -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script src="data.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

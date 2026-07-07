@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ferramentas - Catálogo | Forja</title>
+    <meta name="description" content="Catálogo de ferramentas Forja. Solicite seu orçamento de ferramentas DESKAR e muito mais.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- ===== LOGO GIGANTE E CONTATOS FIXOS NA ESQUERDA ===== -->
+    <div class="fixed-giant-logo">
+        <div class="fixed-logo-glow"></div>
+        <img src="Imagem/IMG_6574.PNG" alt="Símbolo Forja" class="giant-logo-img">
+        
+        <div class="fixed-contact-cards">
+            <a href="https://wa.me/5514999999999" target="_blank" rel="noopener" class="contact-card" id="contact-whatsapp">
+                <div class="contact-card-icon whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </div>
+                <div class="contact-card-info">
+                    <h4>WhatsApp</h4>
+                    <span>(14) 99999-9999</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square contact-card-arrow"></i>
+            </a>
+            <a href="https://www.instagram.com/_Forja_3D" target="_blank" rel="noopener" class="contact-card" id="contact-instagram">
+                <div class="contact-card-icon instagram">
+                    <i class="fa-brands fa-instagram"></i>
+                </div>
+                <div class="contact-card-info">
+                    <h4>Instagram</h4>
+                    <span>@_Forja_3D</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square contact-card-arrow"></i>
+            </a>
+            <a href="mailto:contato@forja.com" class="contact-card" id="contact-email">
+                <div class="contact-card-icon email">
+                    <i class="fa-solid fa-envelope"></i>
+                </div>
+                <div class="contact-card-info">
+                    <h4>E-mail</h4>
+                    <span>contato@forja.com</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square contact-card-arrow"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="header" id="header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo" aria-label="Forja - Página Inicial">
+                <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="logo-img">
+                <span class="logo-text">FORJA</span>
+            </a>
+            <nav class="nav" id="nav" aria-label="Menu principal">
+                <ul>
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="ferramenta.html" class="nav-link active">Ferramentas</a></li>
+                    <li><a href="admin.html" class="nav-link cta-link">Acesso</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <button class="cart-toggle" id="cart-toggle-btn" aria-label="Abrir Carrinho de Orçamentos">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-badge" id="cart-badge">0</span>
+                </button>
+                <button class="mobile-toggle" id="mobile-toggle" aria-label="Abrir menu" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content-wrapper">
+        <div class="catalog-page">
+            
+            <!-- ===== CATALOG HERO ===== -->
+            <section class="catalog-hero">
+                <div class="container">
+                    <span class="section-tag">Nossos Produtos</span>
+                    <h1 class="catalog-title">Catálogo de <span class="accent">Ferramentas</span></h1>
+                    <p class="catalog-subtitle">Selecione os itens desejados abaixo e monte sua lista para enviarmos um orçamento completo e personalizado.</p>
+                </div>
+            </section>
+
+            <!-- ===== DINAMIC CATALOG CONTAINER ===== -->
+            <div id="catalog-container">
+                <!-- Javascript will inject brands and products here -->
+            </div>
+
+        </div>
+        
+        <!-- ===== FOOTER ===== -->
+        <footer class="footer">
+            <div class="container footer-inner">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="logo-img">
+                        <span class="logo-text">FORJA</span>
+                    </div>
+                    <p>Engenharia, Projetos e Impressão 3D</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="ferramenta.html">Ferramentas</a>
+                </div>
+                <div class="footer-social">
+                    <a href="https://www.instagram.com/_Forja_3D" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://wa.me/5514999999999" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="mailto:contato@forja.com" aria-label="E-mail"><i class="fa-solid fa-envelope"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 FORJA. Todos os direitos reservados.</p>
+            </div>
+        </footer>
+    </div> <!-- Fim do main-content-wrapper -->
+
+    <!-- ===== CART SIDEBAR ===== -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h3>Seu Orçamento</h3>
+            <button class="cart-close" id="cart-close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <div class="cart-body">
+            <div class="cart-empty-msg" id="cart-empty-msg">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <p>Nenhum item adicionado ainda.</p>
+            </div>
+            <div class="cart-items" id="cart-items">
+                <!-- Javascript will inject items here -->
+            </div>
+        </div>
+        
+        <div class="cart-footer">
+            <div class="cart-info">
+                <span>Total de Itens:</span>
+                <strong id="cart-total-count">0</strong>
+            </div>
+            <div class="cart-actions-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <button class="btn btn-primary btn-full" id="btn-request-quote-whatsapp" style="background: linear-gradient(135deg, #25d366, #128c7e); box-shadow: 0 4px 20px rgba(37, 211, 102, 0.25);">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <span>Solicitar via WhatsApp</span>
+                </button>
+                <button class="btn btn-ghost btn-full" id="btn-request-quote-email" style="border-color: var(--accent); color: var(--text-primary); background: transparent;">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span>Solicitar via E-mail</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script src="data.js"></script>
+    <script src="cart.js"></script>
+</body>
+</html>

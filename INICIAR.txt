@@ -1,0 +1,171 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                   🚀 INICIAR - LEIA PRIMEIRO!                  ║
+║                   FORJA | IDE v1.0.0                           ║
+╚═══════════════════════════════════════════════════════════════╝
+
+✅ SEU SITE ESTÁ 100% FUNCIONAL!
+
+═══════════════════════════════════════════════════════════════
+
+📌 ACESSAR O SITE
+
+O servidor HTTP está rodando automaticamente em:
+👉 http://localhost:8000
+
+Basta copiar este endereço no seu navegador!
+
+═══════════════════════════════════════════════════════════════
+
+🎮 COMO NAVEGAR
+
+1. Na esquerda: SIDEBAR com os arquivos do projeto
+2. Clique em qualquer arquivo para navegar:
+   ✓ home.html       - Apresentação FORJA
+   ✓ sobre.md        - Missão da empresa
+   ✓ servicos.json   - Serviços oferecidos
+   ✓ contato.js      - Instagram e WhatsApp
+
+3. O arquivo clicado fica destacado em azul
+
+═══════════════════════════════════════════════════════════════
+
+📁 ARQUIVOS DO PROJETO
+
+SITE.html          ← Arquivo principal (abra para editar)
+style.css          ← Estilos e design
+script.js          ← Interatividade
+README.md          ← Documentação completa
+MELHORIAS.md       ← Ideias para v2.0
+RESUMO.txt         ← Resumo executivo
+INICIAR.txt        ← Este arquivo
+
+═══════════════════════════════════════════════════════════════
+
+✏️ EDITAR O CONTEÚDO
+
+Se quer mudar algo:
+
+1. TEXTOS: Edite o arquivo SITE.html
+   - Encontre a seção que quer mudar
+   - Modifique o texto
+   - Atualize no navegador (F5)
+
+2. CORES: Edite o arquivo style.css (linhas 7-19)
+   - Mude as cores hexadecimais
+   - Atualize no navegador
+
+3. ADICIONAR NOVA SEÇÃO:
+   - Adicione <li> no sidebar do HTML
+   - Crie nova <section> com id correspondente
+   - Adicione estilos CSS se necessário
+
+═══════════════════════════════════════════════════════════════
+
+🌐 PUBLICAR NA INTERNET
+
+Quer que seu site fique acessível de qualquer lugar?
+
+OPÇÃO 1: NETLIFY (Recomendado - Grátis)
+  1. Vá para netlify.com
+  2. Faça login (ou crie conta)
+  3. Arraste a pasta SITE inteira
+  4. Pronto! Seu site está online!
+
+OPÇÃO 2: GITHUB PAGES (Grátis)
+  1. Crie conta em github.com
+  2. Crie novo repositório
+  3. Upload da pasta SITE
+  4. Ative GitHub Pages
+  5. Seu site estará em username.github.io/SITE
+
+OPÇÃO 3: SEU PRÓPRIO DOMÍNIO
+  1. Registre domínio (ex: meudominio.com.br)
+  2. Hospede em qualquer servidor (Hostinger, Bluehost)
+  3. Faça upload via FTP
+
+═══════════════════════════════════════════════════════════════
+
+🎨 CUSTOMIZAÇÕES RECOMENDADAS
+
+Para melhorar seu site:
+
+□ Adicione logo da empresa
+  - Coloque imagem em SITE/Imagem/
+  - Adicione <img> no HTML
+
+□ Expanda os serviços
+  - Adicione mais detalhes
+  - Inclua fotos dos projetos
+
+□ Adicione formulário de contato
+  - Use Formspree.io ou similar
+  - Integre com o seu email
+
+□ Otimize para Google
+  - Adicione meta tags
+  - Melhor descrição dos serviços
+
+═══════════════════════════════════════════════════════════════
+
+❓ DÚVIDAS FREQUENTES
+
+P: Preciso de HTTPS?
+R: Sim, para publicar. Mas localmente (http://) funciona OK.
+
+P: Posso usar sem internet?
+R: Sim! Apenas clique no SITE.html (sem servidor).
+  Haverá aviso, mas funciona na maioria dos navegadores.
+
+P: Como faço backup?
+R: Copie a pasta SITE inteira para outro lugar.
+
+P: Posso usar meu próprio domínio?
+R: Sim! Registre domínio e aponte para seu servidor.
+
+P: Preciso de banco de dados?
+R: Não por enquanto. Para formulários avançados, sim.
+
+═══════════════════════════════════════════════════════════════
+
+📚 LEIA MAIS
+
+• README.md      - Documentação técnica completa
+• MELHORIAS.md   - 40+ ideias para expansão
+• RESUMO.txt     - Resumo executivo do projeto
+• script.js      - Código comentado
+
+═══════════════════════════════════════════════════════════════
+
+🎉 PRÓXIMOS PASSOS
+
+Imediatamente:
+1. ✓ Teste o site em http://localhost:8000
+2. ✓ Navegue entre as seções
+3. ✓ Verifique se tudo está certo
+
+Hoje:
+1. ✓ Customize com sua logo
+2. ✓ Ajuste informações de contato
+3. ✓ Adicione fotos dos projetos
+
+Esta semana:
+1. ✓ Registre domínio (ex: forja3d.com.br)
+2. ✓ Publique em Netlify
+3. ✓ Configure Google Analytics
+4. ✓ Compartilhe com clientes!
+
+═══════════════════════════════════════════════════════════════
+
+📞 CONTATO
+
+Se tiver dúvidas com código:
+- Abra SITE.html em um editor (VS Code, Notepad++)
+- Procure por comentários // ou /* */
+- Eles explicam cada parte
+
+═══════════════════════════════════════════════════════════════
+
+Desenvolvido em 2026 - Versão 1.0.0
+Seu site está pronto! Agora é hora de crescer! 🚀
+
+═══════════════════════════════════════════════════════════════
