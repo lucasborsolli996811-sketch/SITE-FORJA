@@ -3,100 +3,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forja | IDE v1.0.0</title>
+    <title>Forja | Engenharia, Projetos e Impressão 3D</title>
+    <meta name="description" content="A Forja transforma ideias em realidade através da engenharia de produção, projetos metalúrgicos e impressão 3D de alta qualidade.">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="script.js"></script>
 </head>
 <body>
 
-    <div class="vs-code-container">
+    <!-- ===== LOGO GIGANTE E CONTATOS FIXOS NA ESQUERDA ===== -->
+    <div class="fixed-giant-logo">
+        <div class="fixed-logo-glow"></div>
+        <img src="Imagem/IMG_6574.PNG" alt="Símbolo Forja" class="giant-logo-img">
         
-        <aside class="activity-bar">
-            <div class="top-icons">
-                <div class="icon active"><i class="fa-regular fa-copy"></i></div>
-                <div class="icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                <div class="icon"><i class="fa-code-branch fa-solid"></i></div>
-                <div class="icon"><i class="fa-cube fa-solid"></i></div>
-            </div>
-            <div class="bottom-icons">
-                <div class="icon"><i class="fa-solid fa-gear"></i></div>
-            </div>
-        </aside>
-
-        <aside class="sidebar">
-            <div class="sidebar-title">EXPLORER: FORJA</div>
-            <div class="folder">
-                <i class="fa-solid fa-chevron-down"></i> <span>projeto-forja</span>
-            </div>
-            <ul class="file-list">
-                <li class="active"><a href="#home"><i class="fa-solid fa-code text-blue"></i> home.html</a></li>
-                <li><a href="#sobre"><i class="fa-solid fa-circle-info text-yellow"></i> sobre.md</a></li>
-                <li><a href="#servicos"><i class="fa-solid fa-gears text-orange"></i> servicos.json</a></li>
-                <li><a href="#contato"><i class="fa-solid fa-address-book text-green"></i> contato.js</a></li>
-            </ul>
-        </aside>
-
-        <main class="editor-area">
-            
-            <div class="tabs-bar">
-                <div class="tab active">
-                    <i class="fa-solid fa-code text-blue"></i> home.html <i class="fa-solid fa-xmark close-tab"></i>
+        <div class="fixed-contact-cards">
+            <a href="https://wa.me/5514999999999" target="_blank" rel="noopener" class="contact-card" id="contact-whatsapp">
+                <div class="contact-card-icon whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i>
                 </div>
-                <div class="tab-empty"></div>
-            </div>
-
-            <div class="editor-content">
-                
-                <section id="home" class="code-section">
-                    <span class="line-number">1</span><span class="code-comment">&lt;!-- SEÇÃO PRINCIPAL --&gt;</span>
-                    <span class="line-number">2</span><span class="code-tag">&lt;div</span> <span class="code-attr">class</span>=<span class="code-string">"cenario-forja"</span><span class="code-tag">&gt;</span>
-                    <div class="hero-brand">
-                        <h1>FORJA</h1>
-                        <p class="subtitle">Engenharia, Desenho Técnico e Impressão 3D</p>
-                    </div>
-                    <span class="line-number">3</span><span class="code-tag">&lt;/div&gt;</span>
-                </section>
-
-                <section id="sobre" class="code-section">
-                    <span class="line-number">4</span><span class="code-comment">/* SOBRE NÓS */</span>
-                    <span class="line-number">5</span><p class="code-text"><span class="code-keyword">const</span> <span class="code-var">missao</span> = <span class="code-string">"Unir a precisão do desenho técnico e da engenharia com a inovação da manufatura aditiva 3D e metalurgia."</span>;</p>
-                </section>
-
-                <section id="servicos" class="code-section">
-                    <span class="line-number">6</span><span class="code-comment">// Nossos Serviços</span>
-                    <span class="line-number">7</span><div class="code-block">
-                        <p><span class="code-keyword">struct</span> <span class="code-type">Servicos</span> {</p>
-                        <p class="indent"><span class="code-var">impressao_3D:</span> <span class="code-string">"Protótipos e peças finais"</span>,</p>
-                        <p class="indent"><span class="code-var">desenho_tecnico:</span> <span class="code-string">"Modelagem e detalhamento"</span>,</p>
-                        <p class="indent"><span class="code-var">projetos_metalurgicos:</span> <span class="code-string">"Dimensionamento e estruturas"</span></p>
-                        <p>}</p>
-                    </div>
-                </section>
-
-                <section id="contato" class="code-section">
-                    <span class="line-number">8</span><span class="code-comment">&lt;!-- CONTATOS --&gt;</span>
-                    <span class="line-number">9</span><div class="code-contact">
-                        <p><i class="fa-brands fa-instagram text-orange"></i> Instagram: <span class="code-string">"@_Forja_3D"</span></p>
-                        <p><i class="fa-brands fa-whatsapp text-green"></i> WhatsApp: <span class="code-string">"(14) 99999-9999"</span></p>
-                    </div>
-                </section>
-
-            </div>
-
-            <footer class="status-bar">
-                <div class="status-left">
-                    <span class="status-item bg-blue"><i class="fa-solid fa-terminal"></i> Ready</span>
-                    <span class="status-item"><i class="fa-solid fa-code-branch"></i> main</span>
+                <div class="contact-card-info">
+                    <h4>WhatsApp</h4>
+                    <span>(14) 99999-9999</span>
                 </div>
-                <div class="status-right">
-                    <span>UTF-8</span>
-                    <span>HTML</span>
+                <i class="fa-solid fa-arrow-up-right-from-square contact-card-arrow"></i>
+            </a>
+            <a href="https://www.instagram.com/_Forja_3D" target="_blank" rel="noopener" class="contact-card" id="contact-instagram">
+                <div class="contact-card-icon instagram">
+                    <i class="fa-brands fa-instagram"></i>
                 </div>
-            </footer>
-
-        </main>
+                <div class="contact-card-info">
+                    <h4>Instagram</h4>
+                    <span>@_Forja_3D</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square contact-card-arrow"></i>
+            </a>
+            <a href="mailto:contato@forja.com" class="contact-card" id="contact-email">
+                <div class="contact-card-icon email">
+                    <i class="fa-solid fa-envelope"></i>
+                </div>
+                <div class="contact-card-info">
+                    <h4>E-mail</h4>
+                    <span>contato@forja.com</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square contact-card-arrow"></i>
+            </a>
+        </div>
     </div>
 
+    <!-- ===== HEADER ===== -->
+    <header class="header" id="header">
+        <div class="container header-inner">
+            <a href="#home" class="logo" aria-label="Forja - Página Inicial">
+                <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="logo-img">
+                <span class="logo-text">FORJA</span>
+            </a>
+            <nav class="nav" id="nav" aria-label="Menu principal">
+                <ul>
+                    <li><a href="index.html" class="nav-link active">Home</a></li>
+                    <li><a href="ferramenta.html" class="nav-link">Ferramentas</a></li>
+                    <li><a href="impressao-3d.html" class="nav-link">Impressão 3D</a></li>
+                    <li><a href="admin.html" class="nav-link cta-link">Acesso</a></li>
+                </ul>
+            </nav>
+            <button class="mobile-toggle" id="mobile-toggle" aria-label="Abrir menu" aria-expanded="false">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- O resto do site fica em um wrapper para garantir que fique sobre o logo de fundo se necessário, mas o layout principal usa margem na esquerda no desktop -->
+    <div class="main-content-wrapper">
+        <!-- ===== HERO ===== -->
+        <section id="home" class="hero">
+            <div class="hero-bg">
+                <div class="hero-particles" id="particles"></div>
+                <div class="hero-gradient"></div>
+            </div>
+            <div class="hero-content">
+                <div class="hero-badge">Engenharia &bull; Metalurgia &bull; Impressão 3D</div>
+                <h1 class="hero-title">
+                    <span class="hero-title-line">Transformamos</span>
+                    <span class="hero-title-line accent">ideias em realidade</span>
+                </h1>
+                <p class="hero-subtitle">Soluções robustas em engenharia de produção, projetos metalúrgicos personalizados e manufatura aditiva de alta precisão.</p>
+                <div class="hero-actions">
+                    <a href="ferramenta.html" class="btn btn-ghost">
+                        <i class="fa-solid fa-wrench"></i>
+                        <span>FERRAMENTA</span>
+                    </a>
+                    <a href="impressao-3d.html" class="btn btn-ghost">
+                        <i class="fa-solid fa-cube"></i>
+                        <span>IMPRESSÃO 3D</span>
+                    </a>
+                    <a href="projeto.html" class="btn btn-ghost">
+                        <i class="fa-solid fa-compass-drafting"></i>
+                        <span>PROJETO</span>
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number" data-target="150">0</span><span class="stat-suffix">+</span>
+                        <span class="stat-label">Projetos Entregues</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-number" data-target="98">0</span><span class="stat-suffix">%</span>
+                        <span class="stat-label">Satisfação</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat">
+                        <span class="stat-number" data-target="3">0</span>
+                        <span class="stat-label">Especialidades</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-scroll-indicator">
+                <span>Scroll</span>
+                <div class="scroll-line"></div>
+            </div>
+        </section>
+
+        <!-- ===== ABOUT ===== -->
+        <section id="sobre" class="about section-padding">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">Quem Somos</span>
+                    <h2 class="section-title">Sobre a <span class="accent">Forja</span></h2>
+                </div>
+                <div class="about-grid">
+                    <div class="about-text reveal">
+                        <p class="about-lead">Unindo a <strong>precisão da engenharia de produção</strong> com a <strong>inovação da manufatura aditiva</strong>.</p>
+                        <p>A Forja nasceu para entregar soluções robustas em desenhos técnicos, projetos metalúrgicos personalizados e peças impressas em 3D com alta qualidade. Cada projeto é tratado com atenção aos detalhes, garantindo que suas ideias ganhem forma com excelência.</p>
+                        <div class="about-features">
+                            <div class="about-feature">
+                                <div class="feature-icon"><i class="fa-solid fa-bullseye"></i></div>
+                                <div>
+                                    <h4>Precisão</h4>
+                                    <p>Detalhamento milimétrico em cada projeto</p>
+                                </div>
+                            </div>
+                            <div class="about-feature">
+                                <div class="feature-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                                <div>
+                                    <h4>Inovação</h4>
+                                    <p>Tecnologias de ponta em manufatura</p>
+                                </div>
+                            </div>
+                            <div class="about-feature">
+                                <div class="feature-icon"><i class="fa-solid fa-handshake"></i></div>
+                                <div>
+                                    <h4>Compromisso</h4>
+                                    <p>Parceria do conceito à entrega final</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-visual reveal">
+                        <div class="about-card-stack">
+                            <div class="about-card card-1">
+                                <i class="fa-solid fa-gear"></i>
+                                <span>Engenharia</span>
+                            </div>
+                            <div class="about-card card-2">
+                                <i class="fa-solid fa-fire-flame-curved"></i>
+                                <span>Metalurgia</span>
+                            </div>
+                            <div class="about-card card-3">
+                                <i class="fa-solid fa-cube"></i>
+                                <span>Impressão 3D</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SERVICES ===== -->
+        <section id="servicos" class="services section-padding">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">O Que Fazemos</span>
+                    <h2 class="section-title">Nossos <span class="accent">Serviços</span></h2>
+                </div>
+                <div class="services-grid">
+                    <div class="service-card reveal" id="service-3d">
+                        <div class="service-card-glow"></div>
+                        <div class="service-icon">
+                            <i class="fa-solid fa-cube"></i>
+                        </div>
+                        <div class="service-number">01</div>
+                        <h3>Impressão 3D</h3>
+                        <p>Produção de protótipos e peças finais com precisão dimensional e excelente acabamento superficial. Utilizamos tecnologias FDM e resina para atender diferentes demandas.</p>
+                        <ul class="service-tags">
+                            <li>Prototipagem</li>
+                            <li>Peças Finais</li>
+                            <li>FDM &amp; Resina</li>
+                        </ul>
+                    </div>
+                    <div class="service-card reveal" id="service-desenho">
+                        <div class="service-card-glow"></div>
+                        <div class="service-icon">
+                            <i class="fa-solid fa-compass-drafting"></i>
+                        </div>
+                        <div class="service-number">02</div>
+                        <h3>Desenho Técnico</h3>
+                        <p>Modelagem 3D e detalhamento de componentes de acordo com as normas técnicas vigentes. Entregamos documentação completa para fabricação.</p>
+                        <ul class="service-tags">
+                            <li>CAD 3D</li>
+                            <li>Detalhamento</li>
+                            <li>Normas ABNT</li>
+                        </ul>
+                    </div>
+                    <div class="service-card reveal" id="service-metalurgia">
+                        <div class="service-card-glow"></div>
+                        <div class="service-icon">
+                            <i class="fa-solid fa-industry"></i>
+                        </div>
+                        <div class="service-number">03</div>
+                        <h3>Projetos Metalúrgicos</h3>
+                        <p>Desenvolvimento, dimensionamento e cálculo estrutural de peças e estruturas metálicas. Do conceito ao projeto executivo.</p>
+                        <ul class="service-tags">
+                            <li>Estruturas</li>
+                            <li>Cálculo</li>
+                            <li>Soldagem</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== CONTACT ===== -->
+        <section id="contato" class="contact section-padding">
+            <div class="container">
+                <div class="section-header">
+                    <span class="section-tag">Vamos Conversar</span>
+                    <h2 class="section-title">Entre em <span class="accent">Contato</span></h2>
+                    <p class="section-subtitle">Tire o seu projeto do papel! Estamos prontos para transformar sua ideia em realidade.</p>
+                </div>
+                <div class="contact-grid">
+                    <div class="contact-form-wrapper reveal">
+                        <form class="contact-form" id="contact-form">
+                            <div class="form-group">
+                                <label for="name">Nome</label>
+                                <input type="text" id="name" name="name" placeholder="Seu nome completo" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="service">Serviço</label>
+                                <select id="service" name="service" required>
+                                    <option value="" disabled selected>Selecione um serviço</option>
+                                    <option value="impressao3d">Impressão 3D</option>
+                                    <option value="desenho">Desenho Técnico</option>
+                                    <option value="metalurgia">Projetos Metalúrgicos</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="message">Mensagem</label>
+                                <textarea id="message" name="message" rows="4" placeholder="Descreva seu projeto..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full" id="submit-btn">
+                                <span>Enviar Mensagem</span>
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer class="footer">
+            <div class="container footer-inner">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="logo-img">
+                        <span class="logo-text">FORJA</span>
+                    </div>
+                    <p>Engenharia, Projetos e Impressão 3D</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#home">Home</a>
+                    <a href="#sobre">Sobre</a>
+                    <a href="#servicos">Serviços</a>
+                    <a href="#contato">Contato</a>
+                </div>
+                <div class="footer-social">
+                    <a href="https://www.instagram.com/_Forja_3D" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://wa.me/5514999999999" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="mailto:contato@forja.com" aria-label="E-mail"><i class="fa-solid fa-envelope"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 FORJA. Todos os direitos reservados.</p>
+            </div>
+        </footer>
+    </div> <!-- Fim do main-content-wrapper -->
+
+    <!-- ===== WHATSAPP FAB ===== -->
+    <a href="https://wa.me/5514999999999" target="_blank" rel="noopener" class="whatsapp-fab" id="whatsapp-fab" aria-label="Fale conosco pelo WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <script src="script.js"></script>
 </body>
 </html>
