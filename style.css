@@ -1142,7 +1142,7 @@ h1, h2, h3, h4, h5, h6 {
 /* ====================================
    RESPONSIVE
    ================================= */
-@media (max-width: 992px) {
+@media screen and (max-width: 992px) {
     /* Mudar layout da logo gigante no mobile */
     .fixed-giant-logo {
         position: relative;
@@ -2382,7 +2382,7 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 12px 30px rgba(249, 115, 22, 0.5);
 }
 
-@media (max-width: 992px) {
+@media screen and (max-width: 992px) {
     /* Hide the admin sidebar entirely on mobile/tablet by default */
     #admin-sidebar {
         display: none !important;
