@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- State ---
     let cart = [];
-    const whatsappNumber = "5514999999999";
+    const whatsappNumber = "5514996811628";
 
     // --- Elements ---
     const cartToggleBtn = document.getElementById('cart-toggle-btn');
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnRequestQuoteEmail.addEventListener('click', () => {
             if (cart.length === 0) return;
 
-            const companyEmail = "contato@forja.com";
+            const companyEmail = "Forja3dprojetos@gmail.com";
             const subject = "Solicitação de Orçamento - Forja Ferramentas";
             
             let body = "Prezada equipe Forja,\n\n";

@@ -794,7 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="text-align:center;">
                         <select class="status-select" data-num="${b.number}" style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:pointer;">
                             <option value="EM ABERTO" ${b.status === 'EM ABERTO' ? 'selected' : ''}>EM ABERTO</option>
-                            <option value="PRODUTO COMPRADO" ${b.status === 'PRODUTO COMPRADO' ? 'selected' : ''} style="color:#25d366;">COMPRADO</option>
+                            <option value="PRODUTO FATURADO" ${b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO' ? 'selected' : ''} style="color:#25d366;">FATURADO</option>
                             <option value="ORÇAMENTO PERDIDO" ${b.status === 'ORÇAMENTO PERDIDO' ? 'selected' : ''} style="color:#ef4444;">PERDIDO</option>
                         </select>
                     </td>
@@ -835,8 +835,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const budget = budgets[budgetIdx];
-                const wasPurchased = budget.status === 'PRODUTO COMPRADO' || budget.stockDeducted === true;
-                const isPurchasing = newStatus === 'PRODUTO COMPRADO';
+                const wasPurchased = budget.status === 'PRODUTO COMPRADO' || budget.status === 'PRODUTO FATURADO' || budget.stockDeducted === true;
+                const isPurchasing = newStatus === 'PRODUTO FATURADO' || newStatus === 'PRODUTO COMPRADO';
 
                 if (isPurchasing && !wasPurchased) {
                     // Check stock first
@@ -869,7 +869,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                     budget.stockDeducted = true;
-                    budget.status = 'PRODUTO COMPRADO';
+                    budget.status = 'PRODUTO FATURADO';
                     window.ForjaDB.saveBudgets(budgets);
                     alert(`Orçamento #${num} finalizado! Estoque atualizado no catálogo.`);
                     renderDashboard(); // Refresh stocks & dashboard metrics!

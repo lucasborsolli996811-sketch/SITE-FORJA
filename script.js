@@ -81,6 +81,22 @@ document.addEventListener('DOMContentLoaded', () => {
         reveals.forEach(el => el.classList.add('revealed'));
     }
 
+    // Calculate faturados count dynamically for "Serviço ao cliente"
+    const budgetsDataStr = localStorage.getItem('forja_budgets');
+    let faturadosCount = 0;
+    if (budgetsDataStr) {
+        try {
+            const budgets = JSON.parse(budgetsDataStr);
+            faturadosCount = budgets.filter(b => b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO').length;
+        } catch (e) {
+            console.error("Error parsing budgets:", e);
+        }
+    }
+    const serviceCounter = document.getElementById('service-customer-counter');
+    if (serviceCounter) {
+        serviceCounter.setAttribute('data-target', (150 + faturadosCount).toString());
+    }
+
     // ---- Stat counter animation ----
     const statNumbers = document.querySelectorAll('.stat-number[data-target]');
 

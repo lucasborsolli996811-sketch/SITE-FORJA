@@ -88,7 +88,7 @@ const defaultBudgets = [
             }
         ],
         observations: '',
-        status: 'PRODUTO COMPRADO',
+        status: 'PRODUTO FATURADO',
         totalValue: 452.00
     }
 ];
