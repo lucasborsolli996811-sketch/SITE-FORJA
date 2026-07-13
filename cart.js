@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnRequestQuoteWhatsapp.addEventListener('click', () => {
             if (cart.length === 0) return;
 
-            let text = "Olá! Gostaria de solicitar um orçamento para os seguintes itens da aba Ferramentas:\n\n";
+            let text = "Olá! Gostaria de solicitar um orçamento para os seguintes itens da aba Tools:\n\n";
             cart.forEach(item => {
                 text += `• ${item.quantity}x ${item.name} (${item.brand})\n`;
                 window.ForjaDB.registerQuote(item.id, item.quantity);
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cart.length === 0) return;
 
             const companyEmail = "Forja3dprojetos@gmail.com";
-            const subject = "Solicitação de Orçamento - Forja Ferramentas";
+            const subject = "Solicitação de Orçamento - Forja Tools";
             
             let body = "Prezada equipe Forja,\n\n";
             body += "Gostaria de solicitar um orçamento formal para os seguintes itens:\n\n";
