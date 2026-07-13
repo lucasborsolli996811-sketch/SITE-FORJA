@@ -556,6 +556,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
             }
+        }
+    };
+
     const toggleEditorLock = (locked) => {
         const inputs = [
             'budget-client-select',
