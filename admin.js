@@ -801,9 +801,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         </select>
                     </td>
                     <td style="text-align:right; white-space:nowrap;">
+                        ${isFaturado ? `
+                        <button class="revert-budget-btn" data-num="${b.number}" title="Estornar e Liberar Edição" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.85rem; font-weight:600; padding:0.5rem; margin-right:0.25rem; font-family:var(--font-heading);">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Estornar
+                        </button>
+                        ` : `
                         <button class="load-budget-btn" data-num="${b.number}" title="Abrir no Editor" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-folder-open"></i> Abrir
                         </button>
+                        `}
                         <button class="delete-budget-btn" data-num="${b.number}" title="Excluir Registro" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.5rem;">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
@@ -962,6 +968,46 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderBudgetsHistory();
                     renderDashboard();
                 }
+            });
+        });
+
+        // Estornar / Revert Budget Button
+        document.querySelectorAll('.revert-budget-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const num = parseInt(btn.getAttribute('data-num'));
+                if (!confirm(`Tem certeza que deseja estornar o orçamento #${num}? O estoque dos produtos será devolvido ao catálogo e o status voltará para EM ABERTO.`)) {
+                    return;
+                }
+                
+                const budgets = window.ForjaDB.getBudgets();
+                const budgetIdx = budgets.findIndex(b => b.number === num);
+                if (budgetIdx === -1) return;
+                
+                const budget = budgets[budgetIdx];
+                const wasPurchased = budget.status === 'PRODUTO COMPRADO' || budget.status === 'PRODUTO FATURADO' || budget.stockDeducted === true;
+                
+                if (wasPurchased) {
+                    // Revert stock
+                    const inventory = window.ForjaDB.getInventory();
+                    for (const item of budget.itens) {
+                        if (item.type === 'tools' && item.productId) {
+                            const product = inventory.find(p => p.id === item.productId);
+                            if (product) {
+                                product.stock = (product.stock || 0) + item.qty;
+                                product.soldCount = Math.max(0, (product.soldCount || 0) - item.qty);
+                            }
+                        }
+                    }
+                    window.ForjaDB.saveInventory(inventory);
+                }
+                
+                budget.stockDeducted = false;
+                budget.status = 'EM ABERTO';
+                window.ForjaDB.saveBudgets(budgets);
+                
+                alert(`Orçamento #${num} estornado com sucesso! Agora você pode editá-lo novamente.`);
+                renderDashboard();
+                renderBudgetsHistory();
             });
         });
     };
