@@ -2183,6 +2183,9 @@ h1, h2, h3, h4, h5, h6 {
     overflow: hidden;
     transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .showcase-card:hover {
@@ -2193,25 +2196,29 @@ h1, h2, h3, h4, h5, h6 {
 
 .showcase-img-wrap {
     width: 100%;
-    height: 240px;
+    height: auto;
     overflow: hidden;
-    background: #000;
+    background: var(--bg-secondary);
     position: relative;
 }
 
 .showcase-img-wrap img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    display: block;
+    object-fit: contain;
     transition: transform 0.6s ease;
 }
 
 .showcase-card:hover .showcase-img-wrap img {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .showcase-info {
     padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .showcase-info h3 {
