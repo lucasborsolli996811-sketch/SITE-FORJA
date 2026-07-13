@@ -556,12 +556,92 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
             }
+    const toggleEditorLock = (locked) => {
+        const inputs = [
+            'budget-client-select',
+            'budget-date-input',
+            'budget-delivery-input',
+            'budget-desc-input',
+            'budget-obs-input',
+            'budget-item-type',
+            'budget-tool-select',
+            'budget-custom-name',
+            'budget-custom-price',
+            'budget-custom-qty'
+        ];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = locked;
+        });
+
+        const btnAddItem = document.getElementById('btn-add-budget-item');
+        if (btnAddItem) {
+            btnAddItem.disabled = locked;
+            btnAddItem.style.opacity = locked ? '0.5' : '1';
+            btnAddItem.style.cursor = locked ? 'not-allowed' : 'pointer';
+        }
+        
+        const btnSave = document.getElementById('btn-save-budget');
+        if (btnSave) {
+            btnSave.disabled = locked;
+            btnSave.style.opacity = locked ? '0.5' : '1';
+            btnSave.style.cursor = locked ? 'not-allowed' : 'pointer';
+        }
+
+        let banner = document.getElementById('budget-lock-banner');
+        if (locked) {
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'budget-lock-banner';
+                banner.style.cssText = 'background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.9rem; font-weight: 600; text-align: center; width: 100%; box-sizing: border-box;';
+                banner.innerHTML = '<i class="fa-solid fa-lock"></i> MODO LEITURA: Orçamento Faturado/Cancelado. Estorne no histórico para editar.';
+                const form = document.getElementById('budget-meta-form');
+                if (form) form.insertBefore(banner, form.firstChild);
+            }
+        } else {
+            if (banner) banner.remove();
+        }
+    };
+
+    const loadBudgetToEditor = (num) => {
+        const budgets = window.ForjaDB.getBudgets();
+        const b = budgets.find(item => item.number === num);
+        
+        if (b) {
+            activeBudgetId = b.number;
+            budgetItens = [...b.itens];
+
+            // Set Form Values
+            document.getElementById('budget-client-select').value = b.clientId;
+            document.getElementById('budget-number-input').value = b.number;
+            document.getElementById('budget-date-input').value = b.date;
+            document.getElementById('budget-delivery-input').value = b.deliveryDate;
+            document.getElementById('budget-desc-input').value = b.desc || '';
+            document.getElementById('budget-obs-input').value = b.observations || '';
+
+            // Check if faturado or lost to toggle editor lock
+            const isLocked = b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO' || b.status === 'ORÇAMENTO PERDIDO';
+            toggleEditorLock(isLocked);
+
+            // Trigger Sync to PDF Preview
+            updatePDFPreview();
+
+            // Switch tab to Generator
+            const generatorTabBtn = document.querySelector('.tab-btn[data-tab="tab-gerador"]');
+            if (generatorTabBtn) generatorTabBtn.click();
+            
+            if (isLocked) {
+                alert(`Orçamento #${b.number} carregado em MODO LEITURA para visualização do PDF!`);
+            } else {
+                alert(`Orçamento #${b.number} carregado no editor com sucesso!`);
+            }
         }
     };
 
     const initBudgetGenerator = () => {
         budgetItens = [];
         activeBudgetId = null;
+        toggleEditorLock(false);
         
         // Setup dates defaults
         const dateInput = document.getElementById('budget-date-input');
@@ -783,15 +863,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         historyTbody.innerHTML = budgets.map(b => {
             const totalBRL = b.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const datePart = b.date.includes('T') ? b.date.split('T')[0] : b.date;
-            const dateFormatted = datePart.split('-').reverse().join('/');
+            
+            // Safe Date Formatting
+            const datePart = b.date && b.date.includes('T') ? b.date.split('T')[0] : b.date;
+            const dateFormatted = datePart ? datePart.split('-').reverse().join('/') : '-';
+            
+            let statusDateLine = '';
+            if (b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO') {
+                const sDate = b.statusDate || b.date;
+                const sDatePart = sDate && sDate.includes('T') ? sDate.split('T')[0] : sDate;
+                const sDateFormatted = sDatePart ? sDatePart.split('-').reverse().join('/') : '-';
+                statusDateLine = `<div style="font-size:0.75rem; color:#25d366; margin-top:0.2rem;" title="Data do Faturamento"><i class="fa-solid fa-circle-check"></i> Faturado: ${sDateFormatted}</div>`;
+            } else if (b.status === 'ORÇAMENTO PERDIDO') {
+                const sDate = b.statusDate || b.date;
+                const sDatePart = sDate && sDate.includes('T') ? sDate.split('T')[0] : sDate;
+                const sDateFormatted = sDatePart ? sDatePart.split('-').reverse().join('/') : '-';
+                statusDateLine = `<div style="font-size:0.75rem; color:#ef4444; margin-top:0.2rem;" title="Data do Cancelamento"><i class="fa-solid fa-circle-xmark"></i> Perdido: ${sDateFormatted}</div>`;
+            }
+
+            const datesHtml = `
+                <div style="font-size:0.85rem; font-weight:500;">Gerado: ${dateFormatted}</div>
+                ${statusDateLine}
+            `;
+
             const isFaturado = b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO';
             
             return `
                 <tr data-num="${b.number}">
                     <td><strong>#${b.number}</strong></td>
                     <td><strong>${b.clientName}</strong></td>
-                    <td>${dateFormatted}</td>
+                    <td>${datesHtml}</td>
                     <td style="text-align:right; font-weight:bold; color:var(--text-primary);">${totalBRL}</td>
                     <td style="text-align:center;">
                         <select class="status-select" data-num="${b.number}" ${isFaturado ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:${isFaturado ? 'not-allowed' : 'pointer'}; opacity:${isFaturado ? '0.75' : '1'};">
@@ -810,6 +911,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fa-solid fa-folder-open"></i> Abrir
                         </button>
                         `}
+                        <button class="view-pdf-btn" data-num="${b.number}" title="Visualizar PDF" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </button>
                         <button class="delete-budget-btn" data-num="${b.number}" title="Excluir Registro" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.5rem;">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
@@ -878,6 +982,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     budget.stockDeducted = true;
                     budget.status = 'PRODUTO FATURADO';
+                    budget.statusDate = new Date().toISOString();
                     window.ForjaDB.saveBudgets(budgets);
                     alert(`Orçamento #${num} finalizado! Estoque atualizado no catálogo.`);
                     renderDashboard(); // Refresh stocks & dashboard metrics!
@@ -897,6 +1002,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.ForjaDB.saveInventory(inventory);
                     budget.stockDeducted = false;
                     budget.status = newStatus;
+                    budget.statusDate = newStatus === 'ORÇAMENTO PERDIDO' ? new Date().toISOString() : null;
                     window.ForjaDB.saveBudgets(budgets);
                     alert(`Status do orçamento #${num} alterado para ${newStatus}. Itens devolvidos ao estoque.`);
                     renderDashboard();
@@ -904,6 +1010,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     // Simple status update (EM ABERTO <-> PERDIDO)
                     budget.status = newStatus;
+                    budget.statusDate = newStatus === 'ORÇAMENTO PERDIDO' ? new Date().toISOString() : null;
                     window.ForjaDB.saveBudgets(budgets);
                 }
 
@@ -916,30 +1023,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.load-budget-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const num = parseInt(btn.getAttribute('data-num'));
-                const budgets = window.ForjaDB.getBudgets();
-                const b = budgets.find(item => item.number === num);
-                
-                if (b) {
-                    activeBudgetId = b.number;
-                    budgetItens = [...b.itens];
+                loadBudgetToEditor(num);
+            });
+        });
 
-                    // Set Form Values
-                    document.getElementById('budget-client-select').value = b.clientId;
-                    document.getElementById('budget-number-input').value = b.number;
-                    document.getElementById('budget-date-input').value = b.date;
-                    document.getElementById('budget-delivery-input').value = b.deliveryDate;
-                    document.getElementById('budget-desc-input').value = b.desc || '';
-                    document.getElementById('budget-obs-input').value = b.observations || '';
-
-                    // Trigger Sync to PDF Preview
-                    updatePDFPreview();
-
-                    // Switch tab to Generator
-                    const generatorTabBtn = document.querySelector('.tab-btn[data-tab="tab-gerador"]');
-                    if (generatorTabBtn) generatorTabBtn.click();
-                    
-                    alert(`Orçamento #${b.number} carregado no editor com sucesso!`);
-                }
+        // View PDF Button
+        document.querySelectorAll('.view-pdf-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const num = parseInt(btn.getAttribute('data-num'));
+                loadBudgetToEditor(num);
             });
         });
 
@@ -1003,6 +1095,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 budget.stockDeducted = false;
                 budget.status = 'EM ABERTO';
+                budget.statusDate = null;
                 window.ForjaDB.saveBudgets(budgets);
                 
                 alert(`Orçamento #${num} estornado com sucesso! Agora você pode editá-lo novamente.`);
