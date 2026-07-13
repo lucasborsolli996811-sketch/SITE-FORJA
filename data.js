@@ -101,8 +101,13 @@ async function syncLoad() {
         return;
     }
     
+    // Timeout de 4 segundos para evitar travamento da tela se o script do Google ou rede falhar
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    
     try {
-        const res = await fetch(GOOGLE_SCRIPT_URL);
+        const res = await fetch(GOOGLE_SCRIPT_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (data && !data.error) {
             cachedData.inventory = data.inventory || [];
@@ -116,6 +121,7 @@ async function syncLoad() {
             throw new Error(data.error || "Erro retornado do Apps Script");
         }
     } catch (err) {
+        clearTimeout(timeoutId);
         console.warn("Erro ao sincronizar com Google Sheets, usando backup local:", err);
         loadFromLocalStorage();
     }

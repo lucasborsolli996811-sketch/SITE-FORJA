@@ -1129,17 +1129,31 @@ document.addEventListener('DOMContentLoaded', () => {
         syncOverlay.style.opacity = '1';
         
         window.ForjaDB.syncLoad().then(() => {
-            checkAuth();
-            syncOverlay.style.opacity = '0';
-            setTimeout(() => {
-                syncOverlay.style.display = 'none';
-            }, 400);
+            try {
+                checkAuth();
+            } catch (err) {
+                console.error("Erro no checkAuth durante inicialização de sucesso:", err);
+            } finally {
+                syncOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    syncOverlay.style.display = 'none';
+                }, 400);
+            }
         }).catch(err => {
             console.error("Erro na sincronização inicial:", err);
-            checkAuth();
-            syncOverlay.style.display = 'none';
+            try {
+                checkAuth();
+            } catch (errAuth) {
+                console.error("Erro no checkAuth durante tratamento de falha de sync:", errAuth);
+            } finally {
+                syncOverlay.style.display = 'none';
+            }
         });
     } else {
-        checkAuth();
+        try {
+            checkAuth();
+        } catch (err) {
+            console.error("Erro no checkAuth síncrono:", err);
+        }
     }
 });
