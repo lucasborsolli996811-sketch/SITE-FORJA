@@ -12,6 +12,12 @@
 </head>
 <body>
 
+    <!-- ===== SYNC LOADING SPINNER ===== -->
+    <div id="sync-loader-overlay" style="position: fixed; inset: 0; background: rgba(10, 10, 15, 0.95); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; color: var(--text-primary); transition: opacity 0.4s ease, visibility 0.4s;">
+        <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(249, 115, 22, 0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <div style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; text-align: center; padding: 0 1rem;">Sincronizando banco de dados...</div>
+    </div>
+
     <!-- ===== LOGO GIGANTE / PDF PREVIEW FIXA NA ESQUERDA ===== -->
     <div class="fixed-giant-logo" id="admin-sidebar">
         <!-- Logged Out View -->

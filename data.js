@@ -1,11 +1,23 @@
 /* ==========================================
-   FORJA — Local Database (Inventory, Clients & Budgets)
+   FORJA — Cloud Database (Google Sheets & Local Storage Fallback)
    ========================================== */
+
+// CONFIGURAÇÃO DO BANCO DE DADOS EM NUVEM
+// Cole aqui a URL do seu Web App gerado no Google Apps Script:
+const GOOGLE_SCRIPT_URL = "URL_DO_GOOGLE_SCRIPT";
 
 const STORAGE_KEY = 'forja_inventory';
 const CLIENTS_KEY = 'forja_clients';
 const BUDGETS_KEY = 'forja_budgets';
 const LAST_NUM_KEY = 'forja_last_budget_num';
+
+// Cache em Memória
+let cachedData = {
+    inventory: [],
+    clients: [],
+    budgets: [],
+    lastBudgetNum: 12001
+};
 
 const defaultInventory = [
     {
@@ -81,30 +93,103 @@ const defaultBudgets = [
     }
 ];
 
-// Initialize DB if empty
-function initDatabase() {
-    if (!localStorage.getItem(STORAGE_KEY)) {
+// --- Carregar banco da Planilha ou LocalStorage (Fallback) ---
+async function syncLoad() {
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("URL_DO_GOOGLE_SCRIPT")) {
+        console.log("Usando banco local (localStorage) - URL do Google Apps Script não configurada.");
+        loadFromLocalStorage();
+        return;
+    }
+    
+    try {
+        const res = await fetch(GOOGLE_SCRIPT_URL);
+        const data = await res.json();
+        if (data && !data.error) {
+            cachedData.inventory = data.inventory || [];
+            cachedData.clients = data.clients || [];
+            cachedData.budgets = data.budgets || [];
+            cachedData.lastBudgetNum = parseInt(data.lastBudgetNum) || 12001;
+            console.log("Banco de dados sincronizado com o Google Sheets com sucesso.");
+            // Salva backup local
+            saveToLocalStorage();
+        } else {
+            throw new Error(data.error || "Erro retornado do Apps Script");
+        }
+    } catch (err) {
+        console.warn("Erro ao sincronizar com Google Sheets, usando backup local:", err);
+        loadFromLocalStorage();
+    }
+}
+
+// --- Salvar alterações na Planilha e no LocalStorage ---
+async function syncSave() {
+    // Backup local imediato
+    saveToLocalStorage();
+
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("URL_DO_GOOGLE_SCRIPT")) {
+        return;
+    }
+
+    try {
+        const body = {
+            action: "saveAll",
+            data: {
+                inventory: cachedData.inventory,
+                clients: cachedData.clients,
+                budgets: cachedData.budgets,
+                lastBudgetNum: cachedData.lastBudgetNum
+            }
+        };
+        const res = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+        const result = await res.json();
+        if (result.success) {
+            console.log("Mudanças salvas no Google Sheets com sucesso.");
+        } else {
+            console.error("Falha ao salvar mudanças no Google Sheets:", result.error);
+        }
+    } catch (err) {
+        console.error("Erro de rede ao salvar no Google Sheets:", err);
+    }
+}
+
+function loadFromLocalStorage() {
+    cachedData.inventory = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    cachedData.clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || '[]');
+    cachedData.budgets = JSON.parse(localStorage.getItem(BUDGETS_KEY) || '[]');
+    cachedData.lastBudgetNum = parseInt(localStorage.getItem(LAST_NUM_KEY) || '12001');
+
+    if (cachedData.inventory.length === 0) {
+        cachedData.inventory = defaultInventory;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultInventory));
     }
-    if (!localStorage.getItem(CLIENTS_KEY)) {
+    if (cachedData.clients.length === 0) {
+        cachedData.clients = defaultClients;
         localStorage.setItem(CLIENTS_KEY, JSON.stringify(defaultClients));
     }
-    if (!localStorage.getItem(BUDGETS_KEY)) {
+    if (cachedData.budgets.length === 0) {
+        cachedData.budgets = defaultBudgets;
         localStorage.setItem(BUDGETS_KEY, JSON.stringify(defaultBudgets));
     }
-    if (!localStorage.getItem(LAST_NUM_KEY)) {
-        localStorage.setItem(LAST_NUM_KEY, '12001');
-    }
+}
+
+function saveToLocalStorage() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cachedData.inventory));
+    localStorage.setItem(CLIENTS_KEY, JSON.stringify(cachedData.clients));
+    localStorage.setItem(BUDGETS_KEY, JSON.stringify(cachedData.budgets));
+    localStorage.setItem(LAST_NUM_KEY, cachedData.lastBudgetNum.toString());
 }
 
 // === INVENTORY OPERATIONS ===
 function getInventory() {
-    initDatabase();
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    return cachedData.inventory;
 }
 
 function saveInventory(inventory) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
+    cachedData.inventory = inventory;
+    syncSave();
 }
 
 function generateProductId(brand) {
@@ -182,12 +267,12 @@ function registerQuote(id, qty) {
 
 // === CLIENT OPERATIONS ===
 function getClients() {
-    initDatabase();
-    return JSON.parse(localStorage.getItem(CLIENTS_KEY) || '[]');
+    return cachedData.clients;
 }
 
 function saveClients(clients) {
-    localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
+    cachedData.clients = clients;
+    syncSave();
 }
 
 function addClient(client) {
@@ -217,26 +302,24 @@ function updateClient(id, updatedFields) {
 
 // === BUDGET OPERATIONS ===
 function getBudgets() {
-    initDatabase();
-    return JSON.parse(localStorage.getItem(BUDGETS_KEY) || '[]');
+    return cachedData.budgets;
 }
 
 function saveBudgets(budgets) {
-    localStorage.setItem(BUDGETS_KEY, JSON.stringify(budgets));
+    cachedData.budgets = budgets;
+    syncSave();
 }
 
 function getNextBudgetNumber() {
-    initDatabase();
-    const lastNum = parseInt(localStorage.getItem(LAST_NUM_KEY) || '12001');
-    return lastNum + 1;
+    return cachedData.lastBudgetNum + 1;
 }
 
 function addBudget(budget) {
     const budgets = getBudgets();
     budget.number = getNextBudgetNumber();
     budgets.push(budget);
+    cachedData.lastBudgetNum = budget.number;
     saveBudgets(budgets);
-    localStorage.setItem(LAST_NUM_KEY, budget.number.toString());
     return budget.number;
 }
 
@@ -295,8 +378,11 @@ function getDashboardStats() {
     };
 }
 
-// Expose to window
+// Expor banco
 window.ForjaDB = {
+    syncLoad,
+    syncSave,
+    
     getInventory,
     saveInventory,
     addProduct,
@@ -321,5 +407,5 @@ window.ForjaDB = {
     getDashboardStats
 };
 
-// Auto-init
-initDatabase();
+// Carregar cache local de forma síncrona inicialmente como redundância
+loadFromLocalStorage();

@@ -981,6 +981,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Run auth check
-    checkAuth();
+    // Run auth check with Cloud sync loading
+    const syncOverlay = document.getElementById('sync-loader-overlay');
+    if (syncOverlay) {
+        syncOverlay.style.display = 'flex';
+        syncOverlay.style.opacity = '1';
+        
+        window.ForjaDB.syncLoad().then(() => {
+            checkAuth();
+            syncOverlay.style.opacity = '0';
+            setTimeout(() => {
+                syncOverlay.style.display = 'none';
+            }, 400);
+        }).catch(err => {
+            console.error("Erro na sincronização inicial:", err);
+            checkAuth();
+            syncOverlay.style.display = 'none';
+        });
+    } else {
+        checkAuth();
+    }
 });
