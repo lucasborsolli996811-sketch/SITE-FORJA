@@ -4,7 +4,7 @@
 
 // CONFIGURAÇÃO DO BANCO DE DADOS EM NUVEM
 // Cole aqui a URL do seu Web App gerado no Google Apps Script:
-const GOOGLE_SCRIPT_URL = "URL_DO_GOOGLE_SCRIPT";
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXig8B36L78x89KCiN_0Y50qJ7cxnBQRd_PfTyLgxN6rcOHgO1yb3keR4c0kWULHu4/exec";
 
 const STORAGE_KEY = 'forja_inventory';
 const CLIENTS_KEY = 'forja_clients';
