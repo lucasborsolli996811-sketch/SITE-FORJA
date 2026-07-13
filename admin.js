@@ -783,7 +783,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         historyTbody.innerHTML = budgets.map(b => {
             const totalBRL = b.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const dateFormatted = b.date.split('-').reverse().join('/');
+            const datePart = b.date.includes('T') ? b.date.split('T')[0] : b.date;
+            const dateFormatted = datePart.split('-').reverse().join('/');
+            const isFaturado = b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO';
             
             return `
                 <tr data-num="${b.number}">
@@ -792,9 +794,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${dateFormatted}</td>
                     <td style="text-align:right; font-weight:bold; color:var(--text-primary);">${totalBRL}</td>
                     <td style="text-align:center;">
-                        <select class="status-select" data-num="${b.number}" style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:pointer;">
+                        <select class="status-select" data-num="${b.number}" ${isFaturado ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:${isFaturado ? 'not-allowed' : 'pointer'}; opacity:${isFaturado ? '0.75' : '1'};">
                             <option value="EM ABERTO" ${b.status === 'EM ABERTO' ? 'selected' : ''}>EM ABERTO</option>
-                            <option value="PRODUTO FATURADO" ${b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO' ? 'selected' : ''} style="color:#25d366;">FATURADO</option>
+                            <option value="PRODUTO FATURADO" ${isFaturado ? 'selected' : ''} style="color:#25d366;">FATURADO</option>
                             <option value="ORÇAMENTO PERDIDO" ${b.status === 'ORÇAMENTO PERDIDO' ? 'selected' : ''} style="color:#ef4444;">PERDIDO</option>
                         </select>
                     </td>
