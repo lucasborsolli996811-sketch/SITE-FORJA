@@ -1162,6 +1162,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => {
                 const num = parseInt(btn.getAttribute('data-num'));
                 loadBudgetToEditor(num);
+                const adminSidebar = document.getElementById('admin-sidebar');
+                if (adminSidebar) {
+                    adminSidebar.classList.add('active-mobile-pdf');
+                }
             });
         });
 

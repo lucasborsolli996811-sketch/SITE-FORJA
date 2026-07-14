@@ -2161,8 +2161,8 @@ h1, h2, h3, h4, h5, h6 {
         font-size: 8pt !important;
     }
     .pdf-logo {
-        width: 48px !important;
-        height: 48px !important;
+        width: 100px !important;
+        height: 100px !important;
     }
 }
 
