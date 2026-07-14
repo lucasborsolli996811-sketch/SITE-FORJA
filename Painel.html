@@ -449,7 +449,25 @@
                                 <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div class="form-group">
                                         <label for="budget-pagamento-input">Condição de Pagamento</label>
-                                        <input type="text" id="budget-pagamento-input" value="A combinar">
+                                        <select id="budget-pagamento-input" required>
+                                            <option value="">Selecione...</option>
+                                            <option value="Pix">Pix</option>
+                                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                            <option value="A vista">A vista</option>
+                                            <option value="14 DDL">14 DDL</option>
+                                            <option value="28 DDL">28 DDL</option>
+                                            <option value="56 DDL">56 DDL</option>
+                                            <option value="28/56 DDL">28/56 DDL</option>
+                                            <option value="A combinar">A combinar</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="cartao-parcelas-wrapper" style="display: none; margin-top: 1rem;">
+                                        <label for="budget-cartao-parcelas">Número de Parcelas</label>
+                                        <select id="budget-cartao-parcelas">
+                                            <option value="1">1x</option>
+                                            <option value="2">2x</option>
+                                            <option value="3">3x</option>
+                                        </select>
                                     </div>
                                     <div class="form-group">
                                         <label for="budget-frete-input">Frete (R$)</label>
@@ -464,10 +482,7 @@
                                      <label for="budget-obs-input">Observações Adicionais</label>
                                      <textarea id="budget-obs-input" rows="2" placeholder="Ex: Frete incluso / Retirada sob responsabilidade do cliente."></textarea>
                                  </div>
-                                 <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; margin-bottom: 1rem;">
-                                     <input type="checkbox" id="budget-show-payment" style="width: auto; cursor: pointer; margin: 0;">
-                                     <label for="budget-show-payment" style="margin: 0; cursor: pointer; font-weight: 500; font-size: 0.9rem; color: var(--text-main);">Exibir Forma de Pagamento no PDF</label>
-                                 </div>
+                                 <!-- Forma de pagamento dinâmica substituída -->
                                 
                                 <div class="cart-actions-container" style="display: flex; gap: 0.75rem; margin-top:2rem;">
                                     <button type="button" class="btn btn-primary" id="btn-save-budget" style="flex:1;">
@@ -593,13 +608,13 @@
     </button>
 
     <!-- Scripts -->
-    <script src="script.js?v=28"></script>
+    <script src="script.js?v=29"></script>
     <!-- Firebase Compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
-    <script src="data.js?v=28"></script>
-    <script src="admin.js?v=28"></script>
+    <script src="data.js?v=29"></script>
+    <script src="admin.js?v=29"></script>
 </body>
 </html>

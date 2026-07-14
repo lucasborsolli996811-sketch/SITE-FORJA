@@ -506,19 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pdfDelivery.textContent = deliveryInput.value || "A combinar";
         }
 
-        const showPaymentCheckbox = document.getElementById('budget-show-payment');
-        const pdfPaymentText = document.getElementById('pdf-payment-text');
-        if (pdfPaymentText) {
-            if (showPaymentCheckbox && showPaymentCheckbox.checked) {
-                pdfPaymentText.innerHTML = `
-                    <p>• Pix: <strong>67.723.944/001-68</strong> — CNPJ — Nubank — Lucas Borsolli</p>
-                    <p>• Cartão de Crédito: Parcelamento em até 3x sem juros (para valores acima de R$60,00)</p>
-                    <p>• Condição: 50% antecipado para início da produção e 50% na entrega.</p>
-                `;
-            } else {
-                pdfPaymentText.innerHTML = '';
-            }
-        }
+        // Payment text is now generated dynamically at the end of the function after totals are calculated.
 
         const obsInput = document.getElementById('budget-obs-input');
         const pdfObs = document.getElementById('pdf-obs-text');
@@ -620,6 +608,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const total = subtotal + frete;
         if (pdfTotalVal) {
             pdfTotalVal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        const pagamentoInputVal = document.getElementById('budget-pagamento-input') ? document.getElementById('budget-pagamento-input').value : '';
+        const parcelasInputVal = document.getElementById('budget-cartao-parcelas') ? parseInt(document.getElementById('budget-cartao-parcelas').value) || 1 : 1;
+        const pdfPaymentText = document.getElementById('pdf-payment-text');
+        
+        if (pdfPaymentText) {
+            if (pagamentoInputVal === 'Pix') {
+                pdfPaymentText.innerHTML = `<p><strong>Pix:</strong> 67.723.944/0001-68 --- Nubank ---- Lucas Borsolli</p>`;
+            } else if (pagamentoInputVal === 'Cartão de Crédito') {
+                const par = total / parcelasInputVal;
+                pdfPaymentText.innerHTML = `<p><strong>Cartão de crédito:</strong> Pode ser parcelado em até 3x sem juros acima de 200 reais de compra<br> ${parcelasInputVal}x de ${par.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>`;
+            } else if (pagamentoInputVal === '28/56 DDL') {
+                const par = total / 2;
+                const formattedPar = par.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                pdfPaymentText.innerHTML = `<p>28 DDL = ${formattedPar}<br>56 DDL = ${formattedPar}</p>`;
+            } else {
+                pdfPaymentText.innerHTML = '';
+            }
         }
 
         // Render Right Side Control Table
@@ -777,7 +784,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (validadeInput) validadeInput.value = "7 dias";
 
         const pagamentoInput = document.getElementById('budget-pagamento-input');
-        if (pagamentoInput) pagamentoInput.value = "A combinar";
+        if (pagamentoInput) {
+            pagamentoInput.value = "";
+            const cartaoParcelasWrapper = document.getElementById('cartao-parcelas-wrapper');
+            if (cartaoParcelasWrapper) cartaoParcelasWrapper.style.display = 'none';
+        }
 
         const freteInput = document.getElementById('budget-frete-input');
         if (freteInput) freteInput.value = "0.00";
@@ -792,6 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'budget-vendedor-input',
             'budget-validade-input',
             'budget-pagamento-input',
+            'budget-cartao-parcelas',
             'budget-frete-input'
         ];
         syncInputs.forEach(id => {
@@ -805,7 +817,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         updatePDFPreview();
+
+        const pgmntInput = document.getElementById('budget-pagamento-input');
+        if (pgmntInput) {
+            pgmntInput.removeEventListener('change', handlePagamentoChange);
+            pgmntInput.addEventListener('change', handlePagamentoChange);
+        }
     };
+
+    function handlePagamentoChange() {
+        const val = this.value;
+        const wrapper = document.getElementById('cartao-parcelas-wrapper');
+        if (wrapper) {
+            if (val === 'Cartão de Crédito') {
+                wrapper.style.display = 'block';
+            } else {
+                wrapper.style.display = 'none';
+            }
+        }
+        updatePDFPreview();
+    }
 
     // Load tool select in budget builder
     const loadToolsSelect = () => {
