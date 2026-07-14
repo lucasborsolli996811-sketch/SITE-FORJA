@@ -671,7 +671,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'budget-client-select',
             'budget-date-input',
             'budget-delivery-input',
-            'budget-desc-input',
             'budget-obs-input',
             'budget-vendedor-input',
             'budget-validade-input',
@@ -731,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('budget-number-input').value = b.number;
             document.getElementById('budget-date-input').value = b.date;
             document.getElementById('budget-delivery-input').value = b.deliveryDate;
-            document.getElementById('budget-desc-input').value = b.desc || '';
+            // document.getElementById('budget-desc-input').value = b.desc || '';
             document.getElementById('budget-obs-input').value = b.observations || '';
             document.getElementById('budget-vendedor-input').value = b.vendedor || 'Lucas';
             document.getElementById('budget-validade-input').value = b.validadeDate || '7 dias';
@@ -798,7 +797,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'budget-client-select', 
             'budget-date-input', 
             'budget-delivery-input', 
-            'budget-desc-input', 
             'budget-obs-input',
             'budget-vendedor-input',
             'budget-validade-input',
@@ -966,7 +964,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = document.getElementById('budget-date-input').value;
             const deliveryDate = document.getElementById('budget-delivery-input').value;
             const observations = document.getElementById('budget-obs-input').value.trim();
-            const desc = document.getElementById('budget-desc-input').value.trim();
+            // const desc = document.getElementById('budget-desc-input').value.trim();
             
             const vendedor = document.getElementById('budget-vendedor-input') ? document.getElementById('budget-vendedor-input').value.trim() : 'Lucas';
             const validadeDate = document.getElementById('budget-validade-input') ? document.getElementById('budget-validade-input').value.trim() : '7 dias';
@@ -984,7 +982,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 deliveryDate,
                 itens: budgetItens,
                 observations,
-                desc,
+                // desc,
                 status: 'EM ABERTO',
                 totalValue,
                 vendedor,
@@ -1171,7 +1169,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     budget.stockDeducted = true;
                     budget.status = 'PRODUTO FATURADO';
                     budget.statusDate = new Date().toISOString();
-                    window.ForjaDB.saveBudgets(budgets);
+                    window.ForjaDB.updateBudgetFull(num, {
+                        stockDeducted: true,
+                        status: 'PRODUTO FATURADO',
+                        statusDate: budget.statusDate
+                    });
                     alert(`Orçamento #${num} finalizado! Estoque atualizado no catálogo.`);
                     renderDashboard(); // Refresh stocks & dashboard metrics!
 
@@ -1191,7 +1193,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     budget.stockDeducted = false;
                     budget.status = newStatus;
                     budget.statusDate = newStatus === 'ORÇAMENTO PERDIDO' ? new Date().toISOString() : null;
-                    window.ForjaDB.saveBudgets(budgets);
+                    window.ForjaDB.updateBudgetFull(num, {
+                        stockDeducted: false,
+                        status: newStatus,
+                        statusDate: budget.statusDate
+                    });
                     alert(`Status do orçamento #${num} alterado para ${newStatus}. Itens devolvidos ao estoque.`);
                     renderDashboard();
 
@@ -1199,7 +1205,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Simple status update (EM ABERTO <-> PERDIDO)
                     budget.status = newStatus;
                     budget.statusDate = newStatus === 'ORÇAMENTO PERDIDO' ? new Date().toISOString() : null;
-                    window.ForjaDB.saveBudgets(budgets);
+                    window.ForjaDB.updateBudgetFull(num, {
+                        status: newStatus,
+                        statusDate: budget.statusDate
+                    });
                 }
 
                 oldValue = newStatus;
@@ -1288,7 +1297,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 budget.stockDeducted = false;
                 budget.status = 'EM ABERTO';
                 budget.statusDate = null;
-                window.ForjaDB.saveBudgets(budgets);
+                window.ForjaDB.updateBudgetFull(num, {
+                    stockDeducted: false,
+                    status: 'EM ABERTO',
+                    statusDate: null
+                });
                 
                 alert(`Orçamento #${num} estornado com sucesso! Agora você pode editá-lo novamente.`);
                 renderDashboard();

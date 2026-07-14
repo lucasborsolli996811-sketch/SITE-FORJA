@@ -349,6 +349,18 @@ function updateBudgetStatus(number, status) {
     return false;
 }
 
+function updateBudgetFull(number, updatedFields) {
+    const budgets = getBudgets();
+    const index = budgets.findIndex(b => b.number === parseInt(number));
+    if (index !== -1) {
+        budgets[index] = { ...budgets[index], ...updatedFields };
+        saveBudgets(budgets);
+        if (db && getCurrentUser()) db.collection('budgets').doc(number.toString()).update(updatedFields);
+        return true;
+    }
+    return false;
+}
+
 function deleteBudget(number) {
     let budgets = getBudgets();
     budgets = budgets.filter(b => b.number !== parseInt(number));
@@ -426,6 +438,7 @@ window.ForjaDB = {
     saveBudgets,
     addBudget,
     updateBudgetStatus,
+    updateBudgetFull,
     deleteBudget,
     getNextBudgetNumber,
     
