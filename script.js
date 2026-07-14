@@ -258,13 +258,18 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = true;
 
             const formData = new FormData(form);
-            // Required Formsubmit fields
-            formData.append('_captcha', 'false');
-            formData.append('_subject', 'Novo Contato do Site - Forja!');
+            const dataObj = {};
+            formData.forEach((value, key) => (dataObj[key] = value));
+            dataObj['_captcha'] = 'false';
+            dataObj['_subject'] = 'Novo Contato do Site - Forja!';
 
             fetch("https://formsubmit.co/ajax/Forja3dprojetos@gmail.com", {
                 method: "POST",
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(dataObj)
             })
             .then(response => response.json())
             .then(data => {
