@@ -246,53 +246,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ---- Contact form (demo) ----
-    const form = document.getElementById('contact-form');
-
-    if (form) {
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:#fff; animation:spin 1s ease-in-out infinite;"></span> Enviando...';
-            btn.disabled = true;
-
-            const formData = new FormData(form);
-            const dataObj = {};
-            formData.forEach((value, key) => (dataObj[key] = value));
-            dataObj['_captcha'] = 'false';
-            dataObj['_subject'] = 'Novo Contato do Site - Forja!';
-
-            fetch("https://formsubmit.co/ajax/Forja3dprojetos@gmail.com", {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(dataObj)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.success) {
-                    btn.innerHTML = '<span>Mensagem Enviada!</span> <i class="fa-solid fa-check"></i>';
-                    btn.style.background = 'linear-gradient(135deg, #25d366, #128c7e)';
-                    setTimeout(() => {
-                        btn.innerHTML = originalHTML;
-                        btn.style.background = '';
-                        btn.disabled = false;
-                        form.reset();
-                    }, 4000);
-                } else {
-                    throw new Error("Formsubmit Error");
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Erro ao enviar a mensagem. Por favor, tente novamente ou entre em contato pelo nosso WhatsApp!");
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-            });
-        });
+    // Check for success redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('sent')) {
+        alert("Sua mensagem foi enviada com sucesso! Entraremos em contato em breve.");
+        // Clean url
+        window.history.replaceState({}, document.title, window.location.pathname);
     }
 
 });
