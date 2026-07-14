@@ -2072,6 +2072,8 @@ h1, h2, h3, h4, h5, h6 {
    PRINT RULES (@media print)
    ================================= */
 @media print {
+    @page { margin: 0; }
+    
     /* Hide scrollbars & set full page */
     html, body {
         background: #ffffff !important;
@@ -2126,7 +2128,7 @@ h1, h2, h3, h4, h5, h6 {
         box-shadow: none !important;
         width: 100% !important;
         max-width: 100% !important;
-        padding: 0 !important;
+        padding: 1cm !important;
         margin: 0 !important;
         border-radius: 0 !important;
         font-size: 11pt !important; /* expand to standard printable size */

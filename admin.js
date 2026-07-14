@@ -726,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('budget-delivery-input').value = b.deliveryDate;
             document.getElementById('budget-desc-input').value = b.desc || '';
             document.getElementById('budget-obs-input').value = b.observations || '';
-            document.getElementById('budget-vendedor-input').value = b.vendedor || 'Rafael';
+            document.getElementById('budget-vendedor-input').value = b.vendedor || 'Lucas';
             document.getElementById('budget-validade-input').value = b.validadeDate || '7 dias';
             document.getElementById('budget-pagamento-input').value = b.paymentCond || 'A combinar';
             document.getElementById('budget-frete-input').value = b.frete || 0;
@@ -771,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (deliveryInput) deliveryInput.value = "Entre 10/07 a 20/07";
 
         const vendedorInput = document.getElementById('budget-vendedor-input');
-        if (vendedorInput) vendedorInput.value = "Rafael";
+        if (vendedorInput) vendedorInput.value = "Lucas";
 
         const validadeInput = document.getElementById('budget-validade-input');
         if (validadeInput) validadeInput.value = "7 dias";
@@ -937,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const observations = document.getElementById('budget-obs-input').value.trim();
             const desc = document.getElementById('budget-desc-input').value.trim();
             
-            const vendedor = document.getElementById('budget-vendedor-input') ? document.getElementById('budget-vendedor-input').value.trim() : 'Rafael';
+            const vendedor = document.getElementById('budget-vendedor-input') ? document.getElementById('budget-vendedor-input').value.trim() : 'Lucas';
             const validadeDate = document.getElementById('budget-validade-input') ? document.getElementById('budget-validade-input').value.trim() : '7 dias';
             const paymentCond = document.getElementById('budget-pagamento-input') ? document.getElementById('budget-pagamento-input').value.trim() : 'A combinar';
             const frete = parseFloat(document.getElementById('budget-frete-input') ? document.getElementById('budget-frete-input').value : 0) || 0;
