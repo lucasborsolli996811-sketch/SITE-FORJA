@@ -589,7 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `
                         <tr>
                             <td>${descHtml}</td>
-                            <td style="text-align:center; color:#b91c1c; font-size: 0.7rem;">${item.ncm || '-'}</td>
+                            <td style="text-align:center; font-size: 0.7rem;">${item.ncm || '-'}</td>
                             <td style="text-align:center;">${item.qty}</td>
                             <td style="text-align:right;">${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                             <td style="text-align:right; font-weight:bold;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
@@ -636,7 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <strong>${item.service}</strong>
                             ${item.details ? `<div style="font-size:0.65rem; color:var(--text-muted);">${item.details}</div>` : ''}
                         </td>
-                        <td style="text-align:center; font-size:0.75rem; color:var(--accent);">${item.ncm || '-'}</td>
+                        <td style="text-align:center; font-size:0.75rem; color:var(--text-muted);">${item.ncm || '-'}</td>
                         <td style="text-align:center;">${item.qty}</td>
                         <td style="text-align:right;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         <td style="text-align:right;">
