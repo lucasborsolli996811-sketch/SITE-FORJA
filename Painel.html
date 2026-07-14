@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso Restrito - Estoque & Orçamentos | Forja</title>
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -38,13 +38,12 @@
                     <!-- PDF Header -->
                     <div class="pdf-header" style="align-items: center; border-bottom: 2px solid #111; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
                         <div class="pdf-header-left" style="display: flex; align-items: center; gap: 0.75rem;">
-                            <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="pdf-logo" style="width: 50px; height: 50px; object-fit: contain;">
-                            <span class="pdf-brand-title" style="font-size: 2.2rem; font-weight: 800;">Forja</span>
+                            <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="pdf-logo" style="width: 420px; height: 420px; object-fit: contain;">
                         </div>
-                        <div class="pdf-header-right" style="font-size: 0.75rem; color: #333 !important; line-height: 1.5; text-align: right;">
-                            <div><i class="fa-brands fa-whatsapp"></i> (14) 99681-1628</div>
-                            <div><i class="fa-brands fa-instagram"></i> @_Forja_3D</div>
-                            <div><i class="fa-solid fa-envelope"></i> Forja3dprojetos@gmail.com</div>
+                        <div class="pdf-header-right" style="font-size: 0.75rem; color: #333 !important; line-height: 1.5; text-align: right; font-weight: normal;">
+                            <div><i class="fa-brands fa-whatsapp" style="font-weight: normal; font-size: inherit;"></i> (14) 99681-1628</div>
+                            <div><i class="fa-brands fa-instagram" style="font-weight: normal; font-size: inherit;"></i> @_Forja_3D</div>
+                            <div><i class="fa-solid fa-envelope" style="font-weight: normal; font-size: inherit;"></i> Forja3dprojetos@gmail.com</div>
                         </div>
                     </div>
                     
@@ -58,7 +57,6 @@
                                 <div><strong>Telefone:</strong> <span id="pdf-client-phone">-</span></div>
                                 <div><strong>E-mail:</strong> <span id="pdf-client-email">-</span></div>
                             </div>
-                            <div id="pdf-desc-text" style="font-size: 0.75rem; color: #555; margin-top: 0.5rem; line-height: 1.3; white-space: pre-wrap; font-style: italic;">[Insira a descrição geral do escopo do orçamento]</div>
                         </div>
                         <div class="pdf-meta-right">
                             <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.35rem; text-transform: uppercase; border-bottom: 1px solid #dee2e6; padding-bottom: 0.15rem; text-align: right;">Dados da Proposta</div>
@@ -101,25 +99,21 @@
                         </div>
                     </div>
                     
-                    <!-- Modern Metadata Grid -->
-                    <div class="pdf-grid-modern">
-                        <div class="pdf-grid-card">
-                            <strong>Vendedor:</strong>
-                            <span id="pdf-vendedor-val">Lucas</span>
-                        </div>
-                        <div class="pdf-grid-card">
-                            <strong>Validade da Proposta:</strong>
-                            <span id="pdf-validade-val">7 dias</span>
-                        </div>
-                        <div class="pdf-grid-card">
-                            <strong>Prazo de Entrega:</strong>
-                            <span id="pdf-prazo-val">A combinar</span>
-                        </div>
-                        <div class="pdf-grid-card">
-                            <strong>Cond. Pagamento:</strong>
-                            <span id="pdf-pagamento-val">A combinar</span>
-                        </div>
-                    </div>
+                    <!-- Modern Metadata Table (Grey labels, White values) -->
+                    <table class="pdf-grid-table" style="width: 100%; border-collapse: collapse; margin-bottom: 1rem; border: 1px solid #dee2e6;">
+                        <tr>
+                            <td class="pdf-grid-label" style="background: #f1f3f5; font-weight: bold; width: 20%; padding: 0.4rem 0.6rem; font-size: 0.75rem; border: 1px solid #dee2e6;">Vendedor:</td>
+                            <td class="pdf-grid-value" id="pdf-vendedor-val" style="background: #ffffff; width: 30%; padding: 0.4rem 0.6rem; font-size: 0.75rem; border: 1px solid #dee2e6; color: #333 !important;">Lucas</td>
+                            <td class="pdf-grid-label" style="background: #f1f3f5; font-weight: bold; width: 20%; padding: 0.4rem 0.6rem; font-size: 0.75rem; border: 1px solid #dee2e6;">Validade da Proposta:</td>
+                            <td class="pdf-grid-value" id="pdf-validade-val" style="background: #ffffff; width: 30%; padding: 0.4rem 0.6rem; font-size: 0.75rem; border: 1px solid #dee2e6; color: #333 !important;">7 dias</td>
+                        </tr>
+                        <tr>
+                            <td class="pdf-grid-label" style="background: #f1f3f5; font-weight: bold; width: 20%; padding: 0.4rem 0.6rem; font-size: 0.75rem; border: 1px solid #dee2e6;">Prazo de Entrega:</td>
+                            <td class="pdf-grid-value" id="pdf-prazo-val" style="background: #ffffff; width: 30%; padding: 0.4rem 0.6rem; font-size: 0.75rem; border: 1px solid #dee2e6; color: #333 !important;">A combinar</td>
+                            <td class="pdf-grid-label" style="background: #f1f3f5; font-weight: bold; width: 20%; padding: 0.4rem 0.6rem; font-size: 0.75rem; border: 1px solid #dee2e6;">Cond. Pagamento:</td>
+                            <td class="pdf-grid-value" id="pdf-pagamento-val" style="background: #ffffff; width: 30%; padding: 0.4rem 0.6rem; font-size: 0.75rem; border: 1px solid #dee2e6; color: #333 !important;">A combinar</td>
+                        </tr>
+                    </table>
 
                     <!-- Observações da Proposta Box -->
                     <div class="pdf-box">
@@ -130,10 +124,8 @@
                     <!-- Formas de Pagamento Box (Canto Inferior) -->
                     <div class="pdf-box">
                         <div class="pdf-box-header">Forma de pagamento:</div>
-                        <div class="pdf-box-body">
-                            <p>• Pix: <strong>67.723.944/001-68</strong> — CNPJ — Nubank — Lucas Borsolli</p>
-                            <p>• Cartão de Crédito: Parcelamento em até 3x sem juros (para valores acima de R$60,00)</p>
-                            <p>• Condição: 50% antecipado para início da produção e 50% na entrega.</p>
+                        <div class="pdf-box-body" id="pdf-payment-text">
+                            <!-- Populated dynamically -->
                         </div>
                     </div>
                 </div>
@@ -171,21 +163,21 @@
             <div class="container">
                 <div class="admin-login-card">
                     <div class="login-header">
-                        <i class="fa-solid fa-lock"></i>
-                        <h2>Painel Administrativo</h2>
-                        <p>Entre com suas credenciais de acesso para gerenciar a empresa.</p>
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <h2>Acesso Seguro</h2>
+                        <p>Faça login com sua conta autenticada do Firebase para acessar o painel administrativo.</p>
                     </div>
                     <form id="login-form">
                         <div class="form-group">
-                            <label for="username">Usuário</label>
-                            <input type="text" id="username" placeholder="Digite seu usuário" required autocomplete="username">
+                            <label for="username"><i class="fa-solid fa-envelope"></i> E-mail do Administrador</label>
+                            <input type="email" id="username" placeholder="Ex: admin@forja3d.com.br" required autocomplete="username">
                         </div>
                         <div class="form-group">
-                            <label for="password">Senha</label>
+                            <label for="password"><i class="fa-solid fa-key"></i> Senha</label>
                             <input type="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
                         </div>
                         <button type="submit" class="btn btn-primary btn-full">
-                            <span>Entrar</span>
+                            <span>Acessar Sistema</span>
                             <i class="fa-solid fa-right-to-bracket"></i>
                         </button>
                         <p id="login-error" class="login-error-msg" style="display:none; color:#ef4444; font-size:0.85rem; text-align:center; margin-top:1rem;"></p>
@@ -451,17 +443,17 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="budget-delivery-input">Previsão de Entrega</label>
-                                    <input type="text" id="budget-delivery-input" placeholder="Ex: Entre 10/07 a 20/07" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="budget-desc-input">Descrição Geral do Escopo</label>
-                                    <textarea id="budget-desc-input" rows="2" placeholder="Ex: Fornecimento de ferramentas e pastilhas de usinagem."></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label for="budget-obs-input">Observações Adicionais</label>
-                                    <textarea id="budget-obs-input" rows="2" placeholder="Ex: Frete incluso / Retirada sob responsabilidade do cliente."></textarea>
-                                </div>
+                                     <label for="budget-delivery-input">Previsão de Entrega</label>
+                                     <input type="text" id="budget-delivery-input" placeholder="Ex: Entre 10/07 a 20/07" required>
+                                 </div>
+                                 <div class="form-group">
+                                     <label for="budget-obs-input">Observações Adicionais</label>
+                                     <textarea id="budget-obs-input" rows="2" placeholder="Ex: Frete incluso / Retirada sob responsabilidade do cliente."></textarea>
+                                 </div>
+                                 <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; margin-bottom: 1rem;">
+                                     <input type="checkbox" id="budget-show-payment" style="width: auto; cursor: pointer; margin: 0;">
+                                     <label for="budget-show-payment" style="margin: 0; cursor: pointer; font-weight: 500; font-size: 0.9rem; color: var(--text-main);">Exibir Forma de Pagamento no PDF</label>
+                                 </div>
                                 
                                 <div class="cart-actions-container" style="display: flex; gap: 0.75rem; margin-top:2rem;">
                                     <button type="button" class="btn btn-primary" id="btn-save-budget" style="flex:1;">
@@ -586,8 +578,13 @@
     </button>
 
     <!-- Scripts -->
-    <script src="script.js?v=19"></script>
-    <script src="data.js?v=19"></script>
-    <script src="admin.js?v=19"></script>
+    <script src="script.js?v=24"></script>
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <script src="data.js?v=24"></script>
+    <script src="admin.js?v=24"></script>
 </body>
 </html>

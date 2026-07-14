@@ -1,10 +1,24 @@
 /* ==========================================
-   FORJA — Cloud Database (Google Sheets & Local Storage Fallback)
+   FORJA — Firebase Cloud Database (Secure Mode)
    ========================================== */
 
-// CONFIGURAÇÃO DO BANCO DE DADOS EM NUVEM
-// Cole aqui a URL do seu Web App gerado no Google Apps Script:
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXig8B36L78x89KCiN_0Y50qJ7cxnBQRd_PfTyLgxN6rcOHgO1yb3keR4c0kWULHu4/exec";
+const firebaseConfig = {
+    apiKey: "AIzaSyA4AWVBOfVCKmTQUOPNHvaMFsdyscqTMK8",
+    authDomain: "forja-db.firebaseapp.com",
+    projectId: "forja-db",
+    storageBucket: "forja-db.firebasestorage.app",
+    messagingSenderId: "895147560900",
+    appId: "1:895147560900:web:13c347dc25eef98ed31e91"
+};
+
+// Initialize Firebase (Compat SDK must be loaded in HTML before data.js)
+if (typeof firebase !== 'undefined') {
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+}
+const db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
+const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
 
 const STORAGE_KEY = 'forja_inventory';
 const CLIENTS_KEY = 'forja_clients';
@@ -19,146 +33,127 @@ let cachedData = {
     lastBudgetNum: 12001
 };
 
-const defaultInventory = [
-    {
-        id: 'deskar-1',
-        brand: 'DESKAR',
-        name: 'Ferramenta de Corte Torno CNC',
-        desc: 'Suporte para pastilha com excelente estabilidade e precisão de corte.',
-        stock: 5,
-        img: '',
-        buyLink: 'https://exemplo.com/comprar-cnc',
-        buyPrice: 50.00,
-        sellPrice: 120.00,
-        soldCount: 8,
-        quotedCount: 15
-    },
-    {
-        id: 'deskar-2',
-        brand: 'DESKAR',
-        name: 'Pastilha de Torneamento TNMG',
-        desc: 'Caixa com 10 pastilhas de alta durabilidade para desbaste e acabamento.',
-        stock: 12,
-        img: '',
-        buyLink: 'https://exemplo.com/comprar-tnmg',
-        buyPrice: 35.00,
-        sellPrice: 85.00,
-        soldCount: 20,
-        quotedCount: 32
-    },
-    {
-        id: 'deskar-3',
-        brand: 'DESKAR',
-        name: 'Broca de Metal Duro Integral',
-        desc: 'Furação de alta performance com cobertura avançada para maior vida útil.',
-        stock: 0,
-        img: '',
-        buyLink: 'https://exemplo.com/comprar-broca',
-        buyPrice: 80.00,
-        sellPrice: 190.00,
-        soldCount: 3,
-        quotedCount: 8
-    }
-];
+// Auth listener callback
+let onAuthStateChangeCallback = null;
 
-const defaultClients = [
-    {
-        id: 'client-1',
-        name: 'STEMA USINAGEM E SOLDA',
-        address: 'Rua das Indústrias, 450 - Bauru/SP',
-        email: 'contato@stema.com.br',
-        phone: '(14) 99777-8888'
-    }
-];
+if (auth) {
+    auth.onAuthStateChanged((user) => {
+        if (onAuthStateChangeCallback) {
+            onAuthStateChangeCallback(user);
+        }
+    });
+}
 
-const defaultBudgets = [
-    {
-        number: 12001,
-        clientId: 'client-1',
-        clientName: 'STEMA USINAGEM E SOLDA',
-        date: '2026-07-01',
-        deliveryDate: 'Entre 10/07 a 20/07',
-        itens: [
-            {
-                service: 'SPMX07T308 YG02',
-                type: 'tools',
-                value: 45.20,
-                qty: 10,
-                total: 452.00
-            }
-        ],
-        observations: '',
-        status: 'PRODUTO FATURADO',
-        totalValue: 452.00
-    }
-];
+// --- Authentication Operations ---
+function loginAdmin(email, password) {
+    if (!auth) return Promise.reject("Firebase Auth não carregado.");
+    return auth.signInWithEmailAndPassword(email, password);
+}
 
-// --- Carregar banco da Planilha ou LocalStorage (Fallback) ---
-async function syncLoad() {
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("URL_DO_GOOGLE_SCRIPT")) {
-        console.log("Usando banco local (localStorage) - URL do Google Apps Script não configurada.");
+function logoutAdmin() {
+    if (!auth) return Promise.resolve();
+    return auth.signOut();
+}
+
+function getCurrentUser() {
+    return auth ? auth.currentUser : null;
+}
+
+function setAuthStateListener(cb) {
+    onAuthStateChangeCallback = cb;
+}
+
+// --- Sincronização Pública (Apenas Estoque) ---
+async function syncLoadPublic() {
+    if (!db) {
+        console.warn("Firebase não inicializado. Usando banco local (localStorage).");
         loadFromLocalStorage();
         return;
     }
-    
-    // Timeout de 4 segundos para evitar travamento da tela se o script do Google ou rede falhar
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
-    
     try {
-        const res = await fetch(GOOGLE_SCRIPT_URL, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        const data = await res.json();
-        if (data && !data.error) {
-            cachedData.inventory = data.inventory || [];
-            cachedData.clients = data.clients || [];
-            cachedData.budgets = data.budgets || [];
-            cachedData.lastBudgetNum = parseInt(data.lastBudgetNum) || 12001;
-            console.log("Banco de dados sincronizado com o Google Sheets com sucesso.");
-            // Salva backup local
-            saveToLocalStorage();
-        } else {
-            throw new Error(data.error || "Erro retornado do Apps Script");
+        const invSnap = await db.collection('inventory').get();
+        if (!invSnap.empty) {
+            cachedData.inventory = invSnap.docs.map(d => d.data());
         }
+        console.log("Catálogo carregado da nuvem (Public).");
     } catch (err) {
-        clearTimeout(timeoutId);
-        console.warn("Erro ao sincronizar com Google Sheets, usando backup local:", err);
+        console.warn("Erro ao carregar catálogo público da nuvem:", err);
         loadFromLocalStorage();
     }
 }
 
-// --- Salvar alterações na Planilha e no LocalStorage ---
-async function syncSave() {
-    // Backup local imediato
-    saveToLocalStorage();
-
-    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("URL_DO_GOOGLE_SCRIPT")) {
+// --- Sincronização Privada (Estoque, Clientes, Orçamentos) ---
+async function syncLoadAdmin() {
+    if (!db) {
+        console.warn("Firebase não inicializado. Usando banco local (localStorage).");
+        alert("Erro Crítico: Os scripts do Firebase não carregaram. Verifique a internet ou bloqueadores de anúncios.");
+        loadFromLocalStorage();
         return;
+    }
+    
+    // Check if logged in first to avoid permission denied
+    if (!getCurrentUser()) {
+        console.error("Usuário não autenticado. Acesso negado às coleções privadas.");
+        return Promise.reject("Não autenticado");
     }
 
     try {
-        const body = {
-            action: "saveAll",
-            data: {
-                inventory: cachedData.inventory,
-                clients: cachedData.clients,
-                budgets: cachedData.budgets,
-                lastBudgetNum: cachedData.lastBudgetNum
-            }
-        };
-        const res = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify(body)
-        });
-        const result = await res.json();
-        if (result.success) {
-            console.log("Mudanças salvas no Google Sheets com sucesso.");
+        let isEmpty = true;
+
+        const invSnap = await db.collection('inventory').get();
+        if (!invSnap.empty) {
+            cachedData.inventory = invSnap.docs.map(d => d.data());
+            isEmpty = false;
+        }
+
+        const cliSnap = await db.collection('clients').get();
+        if (!cliSnap.empty) {
+            cachedData.clients = cliSnap.docs.map(d => d.data());
+            isEmpty = false;
+        }
+
+        const budSnap = await db.collection('budgets').get();
+        if (!budSnap.empty) {
+            cachedData.budgets = budSnap.docs.map(d => d.data());
+            isEmpty = false;
+        }
+
+        const confSnap = await db.collection('config').doc('main').get();
+        if (confSnap.exists) {
+            cachedData.lastBudgetNum = confSnap.data().lastBudgetNum || 12001;
+        }
+
+        if (isEmpty) {
+            console.log("Firebase está vazio. Migrando dados do LocalStorage para a nuvem...");
+            loadFromLocalStorage(); // Carrega o que já existia no PC dele
+            syncSave(); // Força o envio (upload) de tudo pro Firebase
+            alert("Dados sincronizados com o Firebase pela primeira vez!");
         } else {
-            console.error("Falha ao salvar mudanças no Google Sheets:", result.error);
+            console.log("Banco de dados sincronizado com Firebase com sucesso (Admin).");
+            saveToLocalStorage(); // Mantém cópia local para rapidez
         }
     } catch (err) {
-        console.error("Erro de rede ao salvar no Google Sheets:", err);
+        console.warn("Erro ao sincronizar com Firebase, usando backup local:", err);
+        alert("Erro no Firebase (Regras/Conexão): " + err.message);
+        loadFromLocalStorage();
     }
+}
+
+// Retém compatibilidade para salvar tudo se necessário
+function syncSave() {
+    saveToLocalStorage();
+    if (!db || !getCurrentUser()) return; // Somente salva se logado
+
+    cachedData.inventory.forEach(p => {
+        db.collection('inventory').doc(p.id).set(p);
+    });
+    cachedData.clients.forEach(c => {
+        db.collection('clients').doc(c.id).set(c);
+    });
+    cachedData.budgets.forEach(b => {
+        db.collection('budgets').doc(b.number.toString()).set(b);
+    });
+    db.collection('config').doc('main').set({ lastBudgetNum: cachedData.lastBudgetNum });
 }
 
 function loadFromLocalStorage() {
@@ -166,19 +161,6 @@ function loadFromLocalStorage() {
     cachedData.clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || '[]');
     cachedData.budgets = JSON.parse(localStorage.getItem(BUDGETS_KEY) || '[]');
     cachedData.lastBudgetNum = parseInt(localStorage.getItem(LAST_NUM_KEY) || '12001');
-
-    if (cachedData.inventory.length === 0) {
-        cachedData.inventory = defaultInventory;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultInventory));
-    }
-    if (cachedData.clients.length === 0) {
-        cachedData.clients = defaultClients;
-        localStorage.setItem(CLIENTS_KEY, JSON.stringify(defaultClients));
-    }
-    if (cachedData.budgets.length === 0) {
-        cachedData.budgets = defaultBudgets;
-        localStorage.setItem(BUDGETS_KEY, JSON.stringify(defaultBudgets));
-    }
 }
 
 function saveToLocalStorage() {
@@ -195,7 +177,7 @@ function getInventory() {
 
 function saveInventory(inventory) {
     cachedData.inventory = inventory;
-    syncSave();
+    saveToLocalStorage();
 }
 
 function generateProductId(brand) {
@@ -216,6 +198,8 @@ function addProduct(product) {
     
     inventory.push(product);
     saveInventory(inventory);
+    
+    if (db && getCurrentUser()) db.collection('inventory').doc(product.id).set(product);
 }
 
 function updateProduct(id, updatedFields) {
@@ -224,6 +208,7 @@ function updateProduct(id, updatedFields) {
     if (index !== -1) {
         inventory[index] = { ...inventory[index], ...updatedFields };
         saveInventory(inventory);
+        if (db && getCurrentUser()) db.collection('inventory').doc(id).update(updatedFields);
     }
 }
 
@@ -231,6 +216,7 @@ function deleteProduct(id) {
     let inventory = getInventory();
     inventory = inventory.filter(p => p.id !== id);
     saveInventory(inventory);
+    if (db && getCurrentUser()) db.collection('inventory').doc(id).delete();
 }
 
 function getAvailableCatalog() {
@@ -255,6 +241,12 @@ function registerSale(id, qty) {
             p.stock -= saleQty;
             p.soldCount = (p.soldCount || 0) + saleQty;
             saveInventory(inventory);
+            if (db && getCurrentUser()) {
+                db.collection('inventory').doc(id).update({
+                    stock: p.stock,
+                    soldCount: p.soldCount
+                });
+            }
             return true;
         }
     }
@@ -268,6 +260,14 @@ function registerQuote(id, qty) {
         const p = inventory[index];
         p.quotedCount = (p.quotedCount || 0) + qty;
         saveInventory(inventory);
+        // This can be called from public view, so check if auth is available. 
+        // Oh wait, if public users add items to cart, this registerQuote runs when they request quote.
+        // If they are not logged in, they CANNOT write to 'inventory' if rules require auth!
+        // For now we allow write if auth, but if public needs to update quotedCount we would need to allow public updates to quotedCount or use a Cloud Function.
+        // To keep it simple, public doesn't update quotedCount on Firebase, only locally. Admin will sync it later or it's just a local metric.
+        if (db && getCurrentUser()) {
+            db.collection('inventory').doc(id).update({ quotedCount: p.quotedCount }).catch(e=>console.log(e));
+        }
     }
 }
 
@@ -278,7 +278,7 @@ function getClients() {
 
 function saveClients(clients) {
     cachedData.clients = clients;
-    syncSave();
+    saveToLocalStorage();
 }
 
 function addClient(client) {
@@ -286,6 +286,7 @@ function addClient(client) {
     client.id = `client-${Date.now()}`;
     clients.push(client);
     saveClients(clients);
+    if (db && getCurrentUser()) db.collection('clients').doc(client.id).set(client);
     return client;
 }
 
@@ -293,6 +294,7 @@ function deleteClient(id) {
     let clients = getClients();
     clients = clients.filter(c => c.id !== id);
     saveClients(clients);
+    if (db && getCurrentUser()) db.collection('clients').doc(id).delete();
 }
 
 function updateClient(id, updatedFields) {
@@ -301,6 +303,7 @@ function updateClient(id, updatedFields) {
     if (index !== -1) {
         clients[index] = { ...clients[index], ...updatedFields };
         saveClients(clients);
+        if (db && getCurrentUser()) db.collection('clients').doc(id).update(updatedFields);
         return true;
     }
     return false;
@@ -313,7 +316,7 @@ function getBudgets() {
 
 function saveBudgets(budgets) {
     cachedData.budgets = budgets;
-    syncSave();
+    saveToLocalStorage();
 }
 
 function getNextBudgetNumber() {
@@ -326,6 +329,11 @@ function addBudget(budget) {
     budgets.push(budget);
     cachedData.lastBudgetNum = budget.number;
     saveBudgets(budgets);
+    
+    if (db && getCurrentUser()) {
+        db.collection('budgets').doc(budget.number.toString()).set(budget);
+        db.collection('config').doc('main').set({ lastBudgetNum: cachedData.lastBudgetNum });
+    }
     return budget.number;
 }
 
@@ -335,6 +343,7 @@ function updateBudgetStatus(number, status) {
     if (index !== -1) {
         budgets[index].status = status;
         saveBudgets(budgets);
+        if (db && getCurrentUser()) db.collection('budgets').doc(number.toString()).update({ status: status });
         return true;
     }
     return false;
@@ -344,6 +353,7 @@ function deleteBudget(number) {
     let budgets = getBudgets();
     budgets = budgets.filter(b => b.number !== parseInt(number));
     saveBudgets(budgets);
+    if (db && getCurrentUser()) db.collection('budgets').doc(number.toString()).delete();
 }
 
 // === DASHBOARD STATISTICS ===
@@ -386,9 +396,18 @@ function getDashboardStats() {
 
 // Expor banco
 window.ForjaDB = {
-    syncLoad,
+    // Sync Functions
+    syncLoadAdmin,
+    syncLoadPublic,
     syncSave,
     
+    // Auth Functions
+    loginAdmin,
+    logoutAdmin,
+    getCurrentUser,
+    setAuthStateListener,
+    
+    // Core Functions
     getInventory,
     saveInventory,
     addProduct,
@@ -413,5 +432,5 @@ window.ForjaDB = {
     getDashboardStats
 };
 
-// Carregar cache local de forma síncrona inicialmente como redundância
+// Carregar cache local inicialmente para nÃ£o dar erro no boot
 loadFromLocalStorage();

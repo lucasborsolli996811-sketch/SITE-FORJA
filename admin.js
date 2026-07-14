@@ -10,12 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let editingClientId = null; // To keep track if we are editing an existing client
 
     // --- Authentication State ---
-    const checkAuth = () => {
-        const loggedIn = sessionStorage.getItem('forja_admin_logged');
+    const checkAuth = (user) => {
         const loggedOutView = document.getElementById('sidebar-logged-out-view');
         const loggedInView = document.getElementById('sidebar-logged-in-view');
 
-        if (loggedIn === 'true') {
+        if (user) {
             document.body.classList.add('logged-in-admin');
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
@@ -24,11 +23,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (loggedOutView) loggedOutView.style.display = 'none';
             if (loggedInView) loggedInView.style.display = 'block';
             
-            // Render dashboard data
-            renderDashboard();
-            loadClientsSelects();
-            loadToolsSelect();
-            initBudgetGenerator();
+            // Sync Admin DB Data securely
+            const syncOverlay = document.getElementById('sync-loader-overlay');
+            if (syncOverlay) {
+                syncOverlay.style.display = 'flex';
+                syncOverlay.style.opacity = '1';
+                
+                window.ForjaDB.syncLoadAdmin().then(() => {
+                    renderDashboard();
+                    loadClientsSelects();
+                    loadToolsSelect();
+                    initBudgetGenerator();
+                }).catch(err => {
+                    console.error("Erro ao sincronizar admin:", err);
+                }).finally(() => {
+                    syncOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        syncOverlay.style.display = 'none';
+                    }, 400);
+                });
+            } else {
+                window.ForjaDB.syncLoadAdmin().then(() => {
+                    renderDashboard();
+                    loadClientsSelects();
+                    loadToolsSelect();
+                    initBudgetGenerator();
+                });
+            }
+
         } else {
             document.body.classList.remove('logged-in-admin');
             document.getElementById('login-view').style.display = 'block';
@@ -37,28 +59,55 @@ document.addEventListener('DOMContentLoaded', () => {
             // Show default giant logo in sidebar
             if (loggedOutView) loggedOutView.style.display = 'block';
             if (loggedInView) loggedInView.style.display = 'none';
+            
+            // Hide sync overlay if it's showing (since we are not syncing admin data if logged out)
+            const syncOverlay = document.getElementById('sync-loader-overlay');
+            if (syncOverlay) {
+                syncOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    syncOverlay.style.display = 'none';
+                }, 400);
+            }
         }
     };
+
+    // Firebase Auth Listener
+    window.ForjaDB.setAuthStateListener((user) => {
+        checkAuth(user);
+    });
 
     // --- Login Form ---
     const loginForm = document.getElementById('login-form');
     const loginError = document.getElementById('login-error');
+    const loginBtn = loginForm ? loginForm.querySelector('button[type="submit"]') : null;
 
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const user = document.getElementById('username').value.trim();
+            const user = document.getElementById('username').value.trim(); // Now treats as Email
             const pass = document.getElementById('password').value.trim();
 
-            if (user === 'Lucas Borsolli' && pass === '811628') {
-                sessionStorage.setItem('forja_admin_logged', 'true');
-                loginError.style.display = 'none';
-                loginForm.reset();
-                checkAuth();
-            } else {
-                loginError.textContent = "Usuário ou senha incorretos!";
-                loginError.style.display = 'block';
+            if(loginBtn) {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Autenticando...';
             }
+
+            window.ForjaDB.loginAdmin(user, pass)
+                .then(() => {
+                    loginError.style.display = 'none';
+                    loginForm.reset();
+                })
+                .catch((error) => {
+                    console.error("Erro de login:", error);
+                    loginError.textContent = "Credenciais inválidas ou acesso negado!";
+                    loginError.style.display = 'block';
+                })
+                .finally(() => {
+                    if(loginBtn) {
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'Acessar Sistema';
+                    }
+                });
         });
     }
 
@@ -66,8 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-            sessionStorage.removeItem('forja_admin_logged');
-            checkAuth();
+            window.ForjaDB.logoutAdmin();
         });
     }
 
@@ -450,10 +498,18 @@ document.addEventListener('DOMContentLoaded', () => {
             pdfDelivery.textContent = deliveryInput.value || "A combinar";
         }
 
-        const descInput = document.getElementById('budget-desc-input');
-        const pdfDesc = document.getElementById('pdf-desc-text');
-        if (descInput && pdfDesc) {
-            pdfDesc.textContent = descInput.value || "[Insira a descrição geral do escopo do orçamento]";
+        const showPaymentCheckbox = document.getElementById('budget-show-payment');
+        const pdfPaymentText = document.getElementById('pdf-payment-text');
+        if (pdfPaymentText) {
+            if (showPaymentCheckbox && showPaymentCheckbox.checked) {
+                pdfPaymentText.innerHTML = `
+                    <p>• Pix: <strong>67.723.944/001-68</strong> — CNPJ — Nubank — Lucas Borsolli</p>
+                    <p>• Cartão de Crédito: Parcelamento em até 3x sem juros (para valores acima de R$60,00)</p>
+                    <p>• Condição: 50% antecipado para início da produção e 50% na entrega.</p>
+                `;
+            } else {
+                pdfPaymentText.innerHTML = '';
+            }
         }
 
         const obsInput = document.getElementById('budget-obs-input');
@@ -1196,38 +1252,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Run auth check with Cloud sync loading
-    const syncOverlay = document.getElementById('sync-loader-overlay');
-    if (syncOverlay) {
-        syncOverlay.style.display = 'flex';
-        syncOverlay.style.opacity = '1';
-        
-        window.ForjaDB.syncLoad().then(() => {
-            try {
-                checkAuth();
-            } catch (err) {
-                console.error("Erro no checkAuth durante inicialização de sucesso:", err);
-            } finally {
-                syncOverlay.style.opacity = '0';
-                setTimeout(() => {
-                    syncOverlay.style.display = 'none';
-                }, 400);
-            }
-        }).catch(err => {
-            console.error("Erro na sincronização inicial:", err);
-            try {
-                checkAuth();
-            } catch (errAuth) {
-                console.error("Erro no checkAuth durante tratamento de falha de sync:", errAuth);
-            } finally {
-                syncOverlay.style.display = 'none';
-            }
-        });
-    } else {
-        try {
-            checkAuth();
-        } catch (err) {
-            console.error("Erro no checkAuth síncrono:", err);
-        }
-    }
+    // Remove duplicate initial syncLoad and let Firebase Auth trigger it.
 });

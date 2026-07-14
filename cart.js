@@ -273,7 +273,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Run dynamic catalog render
-    renderDynamicCatalog();
+    // Initialize Catalog from DB after sync (Public mode)
+    window.ForjaDB.syncLoadPublic().then(() => {
+        renderDynamicCatalog();
+    });
 
     // --- Request Quote (WhatsApp) ---
     if (btnRequestQuoteWhatsapp) {
