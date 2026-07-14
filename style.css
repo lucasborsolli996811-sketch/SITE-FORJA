@@ -2072,12 +2072,20 @@ h1, h2, h3, h4, h5, h6 {
    PRINT RULES (@media print)
    ================================= */
 @media print {
+    /* Hide browser headers/footers */
+    @page {
+        size: auto;
+        margin: 0mm;
+    }
+    
     /* Hide scrollbars & set full page */
     html, body {
         background: #ffffff !important;
         color: #000000 !important;
         height: auto !important;
         overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Hide website UI elements */

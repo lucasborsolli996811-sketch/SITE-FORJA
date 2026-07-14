@@ -318,8 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const buyPrice = parseFloat(document.getElementById('prod-buy-price').value) || 0;
             const sellPrice = parseFloat(document.getElementById('prod-sell-price').value) || 0;
             const img = document.getElementById('prod-img').value.trim();
+            const ncm = document.getElementById('prod-ncm') ? document.getElementById('prod-ncm').value.trim() : '';
 
-            const newProduct = { brand, name, desc, stock, buyLink, buyPrice, sellPrice, img };
+            const newProduct = { brand, name, desc, stock, buyLink, buyPrice, sellPrice, img, ncm };
             window.ForjaDB.addProduct(newProduct);
             addProductForm.reset();
             renderDashboard();
@@ -372,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>
                     <div style="font-size:0.85rem;">${c.phone}</div>
                     <div style="font-size:0.75rem; color:var(--text-muted);">${c.email}</div>
+                    ${c.cnpj ? `<div style="font-size:0.75rem; color:var(--accent); font-weight:bold;">${c.cnpj}</div>` : ''}
                 </td>
                 <td style="text-align:right; white-space:nowrap;">
                     <button class="edit-client-btn" data-id="${c.id}" title="Editar Cliente" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
@@ -395,6 +397,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('client-address-input').value = client.address;
                     document.getElementById('client-email-input').value = client.email;
                     document.getElementById('client-phone-input').value = client.phone;
+                    if (document.getElementById('client-cnpj-input')) {
+                        document.getElementById('client-cnpj-input').value = client.cnpj || '';
+                    }
                     
                     if (submitBtn) {
                         submitBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> <span>Salvar Alterações</span>`;
@@ -432,13 +437,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const address = document.getElementById('client-address-input').value.trim();
             const email = document.getElementById('client-email-input').value.trim();
             const phone = document.getElementById('client-phone-input').value.trim();
+            const cnpj = document.getElementById('client-cnpj-input') ? document.getElementById('client-cnpj-input').value.trim() : '';
 
             if (editingClientId) {
-                window.ForjaDB.updateClient(editingClientId, { name, address, email, phone });
+                window.ForjaDB.updateClient(editingClientId, { name, address, email, phone, cnpj });
                 alert("Cadastro do cliente atualizado com sucesso!");
                 resetClientFormState();
             } else {
-                window.ForjaDB.addClient({ name, address, email, phone });
+                window.ForjaDB.addClient({ name, address, email, phone, cnpj });
                 alert("Cliente cadastrado com sucesso!");
                 addClientForm.reset();
             }
@@ -476,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pdfClientAddress = document.getElementById('pdf-client-address');
         const pdfClientPhone = document.getElementById('pdf-client-phone');
         const pdfClientEmail = document.getElementById('pdf-client-email');
+        const pdfClientCnpj = document.getElementById('pdf-client-cnpj');
         if (clientSelect && pdfClientName) {
             const clients = window.ForjaDB.getClients();
             const client = clients.find(c => c.id === clientSelect.value);
@@ -483,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pdfClientAddress) pdfClientAddress.textContent = client ? client.address : "-";
             if (pdfClientPhone) pdfClientPhone.textContent = client ? client.phone : "-";
             if (pdfClientEmail) pdfClientEmail.textContent = client ? client.email : "-";
+            if (pdfClientCnpj) pdfClientCnpj.textContent = (client && client.cnpj) ? client.cnpj : "-";
         }
 
         const dateInput = document.getElementById('budget-date-input');
@@ -565,6 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td></td>
                         <td></td>
                         <td></td>
+                        <td></td>
                     </tr>
                 `).join('');
             } else {
@@ -580,6 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `
                         <tr>
                             <td>${descHtml}</td>
+                            <td style="text-align:center; color:#b91c1c; font-size: 0.7rem;">${item.ncm || '-'}</td>
                             <td style="text-align:center;">${item.qty}</td>
                             <td style="text-align:right;">${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                             <td style="text-align:right; font-weight:bold;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
@@ -592,6 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     rowsHtml += Array(5 - budgetItens.length).fill(0).map(() => `
                         <tr>
                             <td>&nbsp;</td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -617,22 +628,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (budgetItens.length === 0) {
                 controlTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:1rem 0;">Nenhum item inserido.</td></tr>`;
             } else {
-                controlTbody.innerHTML = budgetItens.map((item, idx) => `
+                controlTbody.innerHTML = budgetItens.map((item, index) => {
+                    const rowTotal = item.qty * item.value;
+                    return `
                     <tr>
-                        <td><strong>${item.service}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(${item.type.toUpperCase()})</span></td>
+                        <td>
+                            <strong>${item.service}</strong>
+                            ${item.details ? `<div style="font-size:0.65rem; color:var(--text-muted);">${item.details}</div>` : ''}
+                        </td>
+                        <td style="text-align:center; font-size:0.75rem; color:var(--accent);">${item.ncm || '-'}</td>
                         <td style="text-align:center;">${item.qty}</td>
-                        <td style="text-align:right;">R$ ${(item.qty * item.value).toFixed(2)}</td>
+                        <td style="text-align:right;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         <td style="text-align:right;">
-                            <button type="button" class="btn-item-remove remove-budget-item-btn" data-idx="${idx}" style="background:none; border:none; color:#ef4444; cursor:pointer;">
+                            <button type="button" class="btn btn-ghost remove-item-btn" data-index="${index}" style="color:#ef4444; padding:0.25rem;">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
                     </tr>
-                `).join('');
+                `;
+                }).join('');
 
-                document.querySelectorAll('.remove-budget-item-btn').forEach(btn => {
+                document.querySelectorAll('.remove-item-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        const idx = parseInt(btn.getAttribute('data-idx'));
+                        const idx = parseInt(btn.getAttribute('data-index'));
                         budgetItens.splice(idx, 1);
                         updatePDFPreview();
                     });
@@ -860,8 +878,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const value = parseFloat(document.getElementById('budget-item-val').value) || 0;
             const toolSelect = document.getElementById('budget-tool-select');
             const productId = (type === 'tools' && toolSelect) ? toolSelect.value : null;
+            
+            let ncm = '';
+            if (productId) {
+                const inventory = window.ForjaDB.getInventory();
+                const matchedTool = inventory.find(p => p.id === productId);
+                if (matchedTool && matchedTool.ncm) {
+                    ncm = matchedTool.ncm;
+                }
+            }
 
-            budgetItens.push({ service, details, type, value, qty, total: qty * value, productId });
+            budgetItens.push({ service, details, type, value, qty, total: qty * value, productId, ncm });
             
             // Reset item form inputs
             document.getElementById('budget-item-name').value = '';
