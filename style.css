@@ -2464,6 +2464,128 @@ h1, h2, h3, h4, h5, h6 {
     100% { transform: rotate(360deg); }
 }
 
+/* New PDF proposal layout styles */
+.pdf-meta-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
+}
+.pdf-meta-left {
+    flex: 1;
+}
+.pdf-meta-right {
+    text-align: right;
+    width: 220px;
+}
+.pdf-totals-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+.pdf-totals-row {
+    display: flex;
+    justify-content: flex-end;
+    width: 250px;
+    margin-bottom: 0.15rem;
+}
+.pdf-totals-label {
+    text-align: right;
+    font-weight: bold;
+    flex: 1;
+    padding-right: 1.5rem;
+}
+.pdf-totals-value {
+    text-align: right;
+    width: 100px;
+}
+.pdf-totals-final {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-top: 0.35rem;
+    border-top: 1.5px solid #111;
+    padding-top: 0.35rem;
+}
+
+/* PDF Boxes (gray headers) */
+.pdf-box {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    background: #fff;
+}
+.pdf-box-header {
+    background: #f1f3f5;
+    padding: 0.4rem 0.6rem;
+    font-weight: bold;
+    font-size: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+.pdf-box-body {
+    padding: 0.6rem;
+    font-size: 0.7rem;
+    color: #333 !important;
+    line-height: 1.4;
+}
+.pdf-box-body p {
+    margin: 0 0 0.25rem 0;
+}
+.pdf-box-body p:last-child {
+    margin: 0;
+}
+
+/* Grid Table */
+.pdf-grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+}
+.pdf-grid-table td {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.7rem;
+    border: 1px solid #dee2e6;
+}
+.pdf-grid-label {
+    background: #f8f9fa;
+    font-weight: bold;
+    width: 20%;
+}
+.pdf-grid-value {
+    width: 30%;
+    color: #333 !important;
+}
+
+/* Print Specific adjustments */
+@media print {
+    .pdf-totals-final {
+        font-size: 16pt !important;
+    }
+    .pdf-box-header {
+        font-size: 11pt !important;
+        background: #f1f3f5 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    .pdf-box-body {
+        font-size: 10pt !important;
+    }
+    .pdf-grid-table td {
+        font-size: 10pt !important;
+    }
+    .pdf-grid-label {
+        background: #f8f9fa !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
 
 
 

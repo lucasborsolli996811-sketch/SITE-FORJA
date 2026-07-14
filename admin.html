@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso Restrito - Estoque & Orçamentos | Forja</title>
-    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="style.css?v=18">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -42,77 +42,85 @@
                             <span class="pdf-brand-title">Forja</span>
                         </div>
                         <div class="pdf-header-right">
-                            <div>@_Forja_3D</div>
-                            <div>Forja3dprojetos@gmail.com</div>
-                            <div>(14) 99681-1628</div>
+                            <div><strong>WhatsApp:</strong> (14) 99681-1628</div>
+                            <div><strong>Instagram:</strong> @_Forja_3D</div>
+                            <div><strong>E-mail:</strong> Forja3dprojetos@gmail.com</div>
                         </div>
                     </div>
                     
-                    <h2 class="pdf-main-title">ORÇAMENTO PROJETO E IMPRESSÃO 3D</h2>
-                    
-                    <!-- PDF Metadata -->
-                    <div class="pdf-meta-section">
-                        <div class="pdf-meta-row"><strong>Cliente:</strong> <span id="pdf-client-name">NENHUM SELECIONADO</span></div>
-                        <div class="pdf-meta-row"><strong>Produto:</strong> <span id="pdf-product-category">TOOLS</span></div>
-                        <div class="pdf-meta-grid" style="display: grid; grid-template-columns: 1fr 1fr; margin-top:0.3rem;">
-                            <div><strong>Nº Orçamento:</strong> <span id="pdf-budget-num">12001</span></div>
-                            <div><strong>Data Orçamento:</strong> <span id="pdf-budget-date">01/07/2026</span></div>
+                    <!-- PDF Metadata (New Layout) -->
+                    <div class="pdf-meta-container">
+                        <div class="pdf-meta-left">
+                            <div id="pdf-client-name" style="font-size: 1.3rem; font-weight: bold; color: #111;">NENHUM SELECIONADO</div>
+                            <div id="pdf-desc-text" style="font-size: 0.8rem; color: #555; margin-top: 0.25rem; line-height: 1.3; white-space: pre-wrap;">[Insira a descrição geral do escopo do orçamento]</div>
                         </div>
-                        <div class="pdf-meta-row" style="margin-top:0.3rem;"><strong>Data de Entrega:</strong> <span id="pdf-delivery-date">A combinar</span></div>
+                        <div class="pdf-meta-right">
+                            <div style="font-size: 1.1rem; font-weight: bold;">Proposta Nº <span id="pdf-budget-num">12001</span></div>
+                            <div style="font-size: 0.8rem; color: #555; margin-top: 0.25rem;">Bauru, <span id="pdf-budget-date">01/07/2026</span></div>
+                        </div>
                     </div>
                     
                     <!-- PDF Items Table -->
                     <table class="pdf-table">
                         <thead>
                             <tr>
-                                <th>SERVIÇO</th>
-                                <th style="text-align:center;">IMPRESSÃO 3D</th>
-                                <th style="text-align:center;">PROJETO</th>
-                                <th style="text-align:center;">TOOLS</th>
-                                <th style="text-align:right;">TOTAL (R$)</th>
+                                <th style="width: 35%;">Descrição</th>
+                                <th style="width: 35%;">Detalhes</th>
+                                <th style="width: 8%; text-align: center;">Qtd</th>
+                                <th style="width: 11%; text-align: right;">Preço unitário</th>
+                                <th style="width: 11%; text-align: right;">Preço total</th>
                             </tr>
                         </thead>
                         <tbody id="pdf-items-tbody">
                             <!-- Dynamic items -->
                         </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="4" style="text-align:right; font-weight:bold; padding-right:1rem;">TOTAL</td>
-                                <td id="pdf-total-val" style="text-align:right; font-weight:bold; color:var(--accent);">R$ 0,00</td>
-                            </tr>
-                        </tfoot>
                     </table>
-                    
-                    <!-- PDF Description / Remarks -->
-                    <div class="pdf-description-section">
-                        <h4 style="margin-bottom:0.25rem;">Descrição</h4>
-                        <p id="pdf-desc-text" style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4; white-space: pre-wrap;">[Insira a descrição geral do escopo do orçamento]</p>
-                        <h4 style="margin-top:0.75rem; margin-bottom:0.25rem;">Observação adicionais:</h4>
-                        <p id="pdf-obs-text" style="font-size:0.7rem; color:var(--text-muted); line-height:1.4; white-space: pre-wrap;">Nenhuma</p>
+
+                    <!-- Totals Section -->
+                    <div class="pdf-totals-section">
+                        <div class="pdf-totals-row">
+                            <span class="pdf-totals-label">Subtotal</span>
+                            <span class="pdf-totals-value" id="pdf-subtotal-val">R$ 0,00</span>
+                        </div>
+                        <div class="pdf-totals-row">
+                            <span class="pdf-totals-label">Frete</span>
+                            <span class="pdf-totals-value" id="pdf-frete-val">R$ 0,00</span>
+                        </div>
+                        <div class="pdf-totals-row pdf-totals-final">
+                            <span class="pdf-totals-label">Total</span>
+                            <span class="pdf-totals-value" id="pdf-total-val">R$ 0,00</span>
+                        </div>
                     </div>
                     
-                    <!-- PDF Footer (Terms) -->
-                    <div class="pdf-terms">
-                        <div class="pdf-terms-block">
-                            <strong>Orçamento:</strong>
-                            <p>válido por 7 dias • Valores sujeitos a alteração conforme alterações no projeto</p>
-                        </div>
-                        <div class="pdf-terms-block">
-                            <strong>Entrega:</strong>
-                            <p>* IMPRESSÃO 3D: 10 ( dez ) dias úteis, condicionado ao volume da demanda produzida.</p>
-                            <p>* PROJETOS: 10 ( dez ) dias úteis, condicionado ao volume da demanda produzida.</p>
-                            <p>* TOOLS: 15 (quinze) dias úteis, variando do estoque disponível.</p>
-                        </div>
-                        <div class="pdf-terms-block">
-                            <strong>Pagamento:</strong>
-                            <p>Valores acima de R$2.000,00 podem ser parcelados: • Boleto (3x) | • Cartão de Crédito (3x sem juros) ou 10x com juros</p>
-                            <p>• Pix 67.723.944/001-68 — CNPJ — Nubank — Lucas Borsolli</p>
-                        </div>
-                        <div class="pdf-terms-block">
-                            <strong>Formas de Pagamento Impressão 3D:</strong>
-                            <p>• Pix 67.723.944/001-68 — CNPJ — Nubank — Lucas Borsolli</p>
-                            <p>• 50% do valor antecipado para início da produção e 50% no momento da entrega.</p>
-                            <p>• Cartão de Crédito: Para valores acima de R$60,00, é possível parcelar em até 3x sem juros.</p>
+                    <!-- Observações da Proposta Box -->
+                    <div class="pdf-box">
+                        <div class="pdf-box-header">Observações da Proposta</div>
+                        <div class="pdf-box-body" id="pdf-obs-text" style="white-space: pre-wrap;">Nenhuma</div>
+                    </div>
+
+                    <!-- Meta Grid Table -->
+                    <table class="pdf-grid-table">
+                        <tr>
+                            <td class="pdf-grid-label">Vendedor</td>
+                            <td class="pdf-grid-value" id="pdf-vendedor-val">Rafael</td>
+                            <td class="pdf-grid-label">Validade da Proposta</td>
+                            <td class="pdf-grid-value" id="pdf-validade-val">7 dias</td>
+                        </tr>
+                        <tr>
+                            <td class="pdf-grid-label">Prazo de Entrega</td>
+                            <td class="pdf-grid-value" id="pdf-prazo-val">A combinar</td>
+                            <td class="pdf-grid-label">Cond. Pagamento</td>
+                            <td class="pdf-grid-value" id="pdf-pagamento-val">A combinar</td>
+                        </tr>
+                    </table>
+
+                    <!-- Formas de Pagamento Box -->
+                    <div class="pdf-box">
+                        <div class="pdf-box-header">Formas de Pagamento</div>
+                        <div class="pdf-box-body">
+                            <p>• Pix: <strong>67.723.944/001-68</strong> — CNPJ — Nubank — Lucas Borsolli</p>
+                            <p>• Cartão de Crédito: Parcelamento em até 3x sem juros (para valores acima de R$60,00)</p>
+                            <p>• Condição: 50% antecipado para início da produção e 50% na entrega.</p>
                         </div>
                     </div>
                 </div>
@@ -409,6 +417,26 @@
                                         <input type="date" id="budget-date-input" required>
                                     </div>
                                 </div>
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="budget-vendedor-input">Vendedor</label>
+                                        <input type="text" id="budget-vendedor-input" value="Rafael">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="budget-validade-input">Validade da Proposta</label>
+                                        <input type="text" id="budget-validade-input" value="7 dias">
+                                    </div>
+                                </div>
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="budget-pagamento-input">Condição de Pagamento</label>
+                                        <input type="text" id="budget-pagamento-input" value="A combinar">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="budget-frete-input">Frete (R$)</label>
+                                        <input type="number" id="budget-frete-input" min="0" step="0.01" value="0.00">
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label for="budget-delivery-input">Previsão de Entrega</label>
                                     <input type="text" id="budget-delivery-input" placeholder="Ex: Entre 10/07 a 20/07" required>
@@ -463,6 +491,10 @@
                                 <div class="form-group">
                                     <label for="budget-item-name">Nome do Serviço / Item</label>
                                     <input type="text" id="budget-item-name" placeholder="Ex: SPMX07T308 YG02" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="budget-item-details">Detalhes / Especificações (Opcional)</label>
+                                    <input type="text" id="budget-item-details" placeholder="Ex: Pastilha de metal duro / PLA Preto">
                                 </div>
 
                                 <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -541,8 +573,8 @@
     </button>
 
     <!-- Scripts -->
-    <script src="script.js?v=17"></script>
-    <script src="data.js?v=17"></script>
-    <script src="admin.js?v=17"></script>
+    <script src="script.js?v=18"></script>
+    <script src="data.js?v=18"></script>
+    <script src="admin.js?v=18"></script>
 </body>
 </html>

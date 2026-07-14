@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const deliveryInput = document.getElementById('budget-delivery-input');
-        const pdfDelivery = document.getElementById('pdf-delivery-date');
+        const pdfDelivery = document.getElementById('pdf-prazo-val');
         if (deliveryInput && pdfDelivery) {
             pdfDelivery.textContent = deliveryInput.value || "A combinar";
         }
@@ -462,26 +462,38 @@ document.addEventListener('DOMContentLoaded', () => {
             pdfNum.textContent = numInput.value || window.ForjaDB.getNextBudgetNumber();
         }
 
-        // Category/Produto field in metadata
-        const pdfCategory = document.getElementById('pdf-product-category');
-        if (pdfCategory) {
-            if (budgetItens.length === 0) {
-                pdfCategory.textContent = "PRODUTO OU SERVIÇO";
-            } else {
-                const types = [...new Set(budgetItens.map(i => {
-                    if (i.type === 'tools') return 'TOOLS';
-                    if (i.type === 'impressao') return 'IMPRESSÃO 3D';
-                    return 'PROJETO';
-                }))];
-                pdfCategory.textContent = types.join(' / ');
-            }
+        // New Meta Fields
+        const vendedorInput = document.getElementById('budget-vendedor-input');
+        const pdfVendedor = document.getElementById('pdf-vendedor-val');
+        if (vendedorInput && pdfVendedor) {
+            pdfVendedor.textContent = vendedorInput.value || "Rafael";
+        }
+
+        const validadeInput = document.getElementById('budget-validade-input');
+        const pdfValidade = document.getElementById('pdf-validade-val');
+        if (validadeInput && pdfValidade) {
+            pdfValidade.textContent = validadeInput.value || "7 dias";
+        }
+
+        const pagamentoInput = document.getElementById('budget-pagamento-input');
+        const pdfPagamento = document.getElementById('pdf-pagamento-val');
+        if (pagamentoInput && pdfPagamento) {
+            pdfPagamento.textContent = pagamentoInput.value || "A combinar";
+        }
+
+        const freteInput = document.getElementById('budget-frete-input');
+        const pdfFrete = document.getElementById('pdf-frete-val');
+        const frete = parseFloat(freteInput ? freteInput.value : 0) || 0;
+        if (pdfFrete) {
+            pdfFrete.textContent = frete.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
 
         // Render PDF Table
         const pdfItemsTbody = document.getElementById('pdf-items-tbody');
+        const pdfSubtotalVal = document.getElementById('pdf-subtotal-val');
         const pdfTotalVal = document.getElementById('pdf-total-val');
         
-        let total = 0;
+        let subtotal = 0;
         if (pdfItemsTbody) {
             if (budgetItens.length === 0) {
                 // Empty rows placeholder
@@ -496,15 +508,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 `).join('');
             } else {
                 let rowsHtml = budgetItens.map(item => {
-                    const subtotal = item.qty * item.value;
-                    total += subtotal;
+                    const rowTotal = item.qty * item.value;
+                    subtotal += rowTotal;
                     return `
                         <tr>
                             <td>${item.service}</td>
-                            <td style="text-align:center;">${item.type === 'impressao' ? `R$ ${item.value.toFixed(2)}` : ''}</td>
-                            <td style="text-align:center;">${item.type === 'projeto' ? `R$ ${item.value.toFixed(2)}` : ''}</td>
-                            <td style="text-align:center;">${item.type === 'tools' ? `R$ ${item.value.toFixed(2)}` : ''}</td>
-                            <td style="text-align:right; font-weight:bold;">${subtotal.toFixed(2)}</td>
+                            <td>${item.details || ''}</td>
+                            <td style="text-align:center;">${item.qty}</td>
+                            <td style="text-align:right;">${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            <td style="text-align:right; font-weight:bold;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         </tr>
                     `;
                 }).join('');
@@ -525,6 +537,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        if (pdfSubtotalVal) {
+            pdfSubtotalVal.textContent = subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        const total = subtotal + frete;
         if (pdfTotalVal) {
             pdfTotalVal.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         }
@@ -566,11 +583,16 @@ document.addEventListener('DOMContentLoaded', () => {
             'budget-delivery-input',
             'budget-desc-input',
             'budget-obs-input',
+            'budget-vendedor-input',
+            'budget-validade-input',
+            'budget-pagamento-input',
+            'budget-frete-input',
             'budget-item-type',
             'budget-tool-select',
-            'budget-custom-name',
-            'budget-custom-price',
-            'budget-custom-qty'
+            'budget-item-name',
+            'budget-item-details',
+            'budget-item-qty',
+            'budget-item-val'
         ];
         inputs.forEach(id => {
             const el = document.getElementById(id);
@@ -613,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (b) {
             activeBudgetId = b.number;
             budgetItens = [...b.itens];
-
+            
             // Set Form Values
             document.getElementById('budget-client-select').value = b.clientId;
             document.getElementById('budget-number-input').value = b.number;
@@ -621,6 +643,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('budget-delivery-input').value = b.deliveryDate;
             document.getElementById('budget-desc-input').value = b.desc || '';
             document.getElementById('budget-obs-input').value = b.observations || '';
+            document.getElementById('budget-vendedor-input').value = b.vendedor || 'Rafael';
+            document.getElementById('budget-validade-input').value = b.validadeDate || '7 dias';
+            document.getElementById('budget-pagamento-input').value = b.paymentCond || 'A combinar';
+            document.getElementById('budget-frete-input').value = b.frete || 0;
 
             // Check if faturado or lost to toggle editor lock
             const isLocked = b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO' || b.status === 'ORÇAMENTO PERDIDO';
@@ -661,8 +687,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const deliveryInput = document.getElementById('budget-delivery-input');
         if (deliveryInput) deliveryInput.value = "Entre 10/07 a 20/07";
 
+        const vendedorInput = document.getElementById('budget-vendedor-input');
+        if (vendedorInput) vendedorInput.value = "Rafael";
+
+        const validadeInput = document.getElementById('budget-validade-input');
+        if (validadeInput) validadeInput.value = "7 dias";
+
+        const pagamentoInput = document.getElementById('budget-pagamento-input');
+        if (pagamentoInput) pagamentoInput.value = "A combinar";
+
+        const freteInput = document.getElementById('budget-frete-input');
+        if (freteInput) freteInput.value = "0.00";
+
         // Setup input event synchronization
-        const syncInputs = ['budget-client-select', 'budget-date-input', 'budget-delivery-input', 'budget-desc-input', 'budget-obs-input'];
+        const syncInputs = [
+            'budget-client-select', 
+            'budget-date-input', 
+            'budget-delivery-input', 
+            'budget-desc-input', 
+            'budget-obs-input',
+            'budget-vendedor-input',
+            'budget-validade-input',
+            'budget-pagamento-input',
+            'budget-frete-input'
+        ];
         syncInputs.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -742,15 +790,19 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const type = document.getElementById('budget-item-type').value;
             const service = document.getElementById('budget-item-name').value.trim();
+            const details = document.getElementById('budget-item-details') ? document.getElementById('budget-item-details').value.trim() : '';
             const qty = parseInt(document.getElementById('budget-item-qty').value) || 1;
             const value = parseFloat(document.getElementById('budget-item-val').value) || 0;
             const toolSelect = document.getElementById('budget-tool-select');
             const productId = (type === 'tools' && toolSelect) ? toolSelect.value : null;
 
-            budgetItens.push({ service, type, value, qty, total: qty * value, productId });
+            budgetItens.push({ service, details, type, value, qty, total: qty * value, productId });
             
             // Reset item form inputs
             document.getElementById('budget-item-name').value = '';
+            if (document.getElementById('budget-item-details')) {
+                document.getElementById('budget-item-details').value = '';
+            }
             document.getElementById('budget-item-qty').value = '1';
             document.getElementById('budget-item-val').value = '0.00';
             document.getElementById('budget-tool-select').value = '';
@@ -793,7 +845,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const observations = document.getElementById('budget-obs-input').value.trim();
             const desc = document.getElementById('budget-desc-input').value.trim();
             
-            const totalValue = budgetItens.reduce((sum, i) => sum + i.total, 0);
+            const vendedor = document.getElementById('budget-vendedor-input') ? document.getElementById('budget-vendedor-input').value.trim() : 'Rafael';
+            const validadeDate = document.getElementById('budget-validade-input') ? document.getElementById('budget-validade-input').value.trim() : '7 dias';
+            const paymentCond = document.getElementById('budget-pagamento-input') ? document.getElementById('budget-pagamento-input').value.trim() : 'A combinar';
+            const frete = parseFloat(document.getElementById('budget-frete-input') ? document.getElementById('budget-frete-input').value : 0) || 0;
+
+            const itemsTotal = budgetItens.reduce((sum, i) => sum + i.total, 0);
+            const totalValue = itemsTotal + frete;
 
             const budgetData = {
                 number,
@@ -806,6 +864,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 desc,
                 status: 'EM ABERTO',
                 totalValue,
+                vendedor,
+                validadeDate,
+                paymentCond,
+                frete,
                 stockDeducted: false
             };
 
