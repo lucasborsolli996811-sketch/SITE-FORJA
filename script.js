@@ -254,16 +254,39 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<span>Enviado!</span> <i class="fa-solid fa-check"></i>';
-            btn.style.background = 'linear-gradient(135deg, #25d366, #128c7e)';
+            btn.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:#fff; animation:spin 1s ease-in-out infinite;"></span> Enviando...';
             btn.disabled = true;
 
-            setTimeout(() => {
+            const formData = new FormData(form);
+            // Required Formsubmit fields
+            formData.append('_captcha', 'false');
+            formData.append('_subject', 'Novo Contato do Site - Forja!');
+
+            fetch("https://formsubmit.co/ajax/Forja3dprojetos@gmail.com", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    btn.innerHTML = '<span>Mensagem Enviada!</span> <i class="fa-solid fa-check"></i>';
+                    btn.style.background = 'linear-gradient(135deg, #25d366, #128c7e)';
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.style.background = '';
+                        btn.disabled = false;
+                        form.reset();
+                    }, 4000);
+                } else {
+                    throw new Error("Formsubmit Error");
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erro ao enviar a mensagem. Por favor, tente novamente ou entre em contato pelo nosso WhatsApp!");
                 btn.innerHTML = originalHTML;
-                btn.style.background = '';
                 btn.disabled = false;
-                form.reset();
-            }, 3000);
+            });
         });
     }
 
