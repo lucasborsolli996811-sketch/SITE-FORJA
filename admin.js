@@ -111,6 +111,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Wipe DB ---
+    const wipeBtn = document.getElementById('wipe-db-btn');
+    if (wipeBtn) {
+        wipeBtn.addEventListener('click', async () => {
+            if(confirm('🚨 ATENÇÃO: Tem certeza absoluta que deseja apagar TODO o banco de dados (produtos, clientes, orçamentos e histórico)? Isso NÃO pode ser desfeito.')) {
+                if(confirm('ÚLTIMO AVISO: Isso vai zerar o sistema completamente e preparar para o primeiro uso oficial. Deseja continuar?')) {
+                    const btnOriginalHTML = wipeBtn.innerHTML;
+                    wipeBtn.innerHTML = 'Apagando...';
+                    wipeBtn.disabled = true;
+                    try {
+                        const db = firebase.firestore();
+                        const inv = await db.collection('inventory').get();
+                        inv.forEach(doc => doc.ref.delete());
+                        const cli = await db.collection('clients').get();
+                        cli.forEach(doc => doc.ref.delete());
+                        const bud = await db.collection('budgets').get();
+                        bud.forEach(doc => doc.ref.delete());
+                        await db.collection('config').doc('main').set({ lastBudgetNum: 12000 });
+                        localStorage.clear();
+                        alert('✅ BANCO DE DADOS ZERADO COM SUCESSO! Iniciando o sistema limpo...');
+                        window.location.reload();
+                    } catch(e) {
+                        alert('Erro ao apagar banco de dados: ' + e.message);
+                        wipeBtn.innerHTML = btnOriginalHTML;
+                        wipeBtn.disabled = false;
+                    }
+                }
+            }
+        });
+    }
+
     // --- Logout ---
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
