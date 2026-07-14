@@ -2540,25 +2540,27 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0;
 }
 
-/* Grid Table */
-.pdf-grid-table {
-    width: 100%;
-    border-collapse: collapse;
+/* Modern Grid Layout */
+.pdf-grid-modern {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 0.75rem;
     margin-bottom: 1rem;
-    border: 1px solid #dee2e6;
 }
-.pdf-grid-table td {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.7rem;
-    border: 1px solid #dee2e6;
-}
-.pdf-grid-label {
+.pdf-grid-card {
     background: #f8f9fa;
-    font-weight: bold;
-    width: 20%;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
 }
-.pdf-grid-value {
-    width: 30%;
+.pdf-grid-card strong {
+    color: #111;
+}
+.pdf-grid-card span {
     color: #333 !important;
 }
 
@@ -2576,10 +2578,8 @@ h1, h2, h3, h4, h5, h6 {
     .pdf-box-body {
         font-size: 10pt !important;
     }
-    .pdf-grid-table td {
+    .pdf-grid-card {
         font-size: 10pt !important;
-    }
-    .pdf-grid-label {
         background: #f8f9fa !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;

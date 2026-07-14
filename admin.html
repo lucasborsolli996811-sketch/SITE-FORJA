@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso Restrito - Estoque & Orçamentos | Forja</title>
-    <link rel="stylesheet" href="style.css?v=18">
+    <link rel="stylesheet" href="style.css?v=19">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -36,27 +36,37 @@
             <div class="pdf-container">
                 <div class="pdf-sheet" id="invoice-pdf">
                     <!-- PDF Header -->
-                    <div class="pdf-header">
-                        <div class="pdf-header-left">
-                            <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="pdf-logo">
-                            <span class="pdf-brand-title">Forja</span>
+                    <div class="pdf-header" style="align-items: center; border-bottom: 2px solid #111; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+                        <div class="pdf-header-left" style="display: flex; align-items: center; gap: 0.75rem;">
+                            <img src="Imagem/IMG_6574.PNG" alt="Logo Forja" class="pdf-logo" style="width: 50px; height: 50px; object-fit: contain;">
+                            <span class="pdf-brand-title" style="font-size: 2.2rem; font-weight: 800;">Forja</span>
                         </div>
-                        <div class="pdf-header-right">
-                            <div><strong>WhatsApp:</strong> (14) 99681-1628</div>
-                            <div><strong>Instagram:</strong> @_Forja_3D</div>
-                            <div><strong>E-mail:</strong> Forja3dprojetos@gmail.com</div>
+                        <div class="pdf-header-right" style="font-size: 0.75rem; color: #333 !important; line-height: 1.5; text-align: right;">
+                            <div><i class="fa-brands fa-whatsapp"></i> (14) 99681-1628</div>
+                            <div><i class="fa-brands fa-instagram"></i> @_Forja_3D</div>
+                            <div><i class="fa-solid fa-envelope"></i> Forja3dprojetos@gmail.com</div>
                         </div>
                     </div>
                     
                     <!-- PDF Metadata (New Layout) -->
                     <div class="pdf-meta-container">
                         <div class="pdf-meta-left">
-                            <div id="pdf-client-name" style="font-size: 1.3rem; font-weight: bold; color: #111;">NENHUM SELECIONADO</div>
-                            <div id="pdf-desc-text" style="font-size: 0.8rem; color: #555; margin-top: 0.25rem; line-height: 1.3; white-space: pre-wrap;">[Insira a descrição geral do escopo do orçamento]</div>
+                            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.35rem; text-transform: uppercase; border-bottom: 1px solid #dee2e6; padding-bottom: 0.15rem;">Informações do Cliente</div>
+                            <div style="line-height: 1.4; font-size: 0.75rem;">
+                                <div><strong>Cliente:</strong> <span id="pdf-client-name">NENHUM SELECIONADO</span></div>
+                                <div><strong>Endereço:</strong> <span id="pdf-client-address">-</span></div>
+                                <div><strong>Telefone:</strong> <span id="pdf-client-phone">-</span></div>
+                                <div><strong>E-mail:</strong> <span id="pdf-client-email">-</span></div>
+                            </div>
+                            <div id="pdf-desc-text" style="font-size: 0.75rem; color: #555; margin-top: 0.5rem; line-height: 1.3; white-space: pre-wrap; font-style: italic;">[Insira a descrição geral do escopo do orçamento]</div>
                         </div>
                         <div class="pdf-meta-right">
-                            <div style="font-size: 1.1rem; font-weight: bold;">Proposta Nº <span id="pdf-budget-num">12001</span></div>
-                            <div style="font-size: 0.8rem; color: #555; margin-top: 0.25rem;">Bauru, <span id="pdf-budget-date">01/07/2026</span></div>
+                            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 0.35rem; text-transform: uppercase; border-bottom: 1px solid #dee2e6; padding-bottom: 0.15rem; text-align: right;">Dados da Proposta</div>
+                            <div style="line-height: 1.4; font-size: 0.75rem; text-align: right;">
+                                <div><strong>Forja</strong></div>
+                                <div><strong>Proposta Nº:</strong> <span id="pdf-budget-num">12001</span></div>
+                                <div><strong>Emissão:</strong> Jaú-SP, <span id="pdf-budget-date">01/07/2026</span></div>
+                            </div>
                         </div>
                     </div>
                     
@@ -64,11 +74,10 @@
                     <table class="pdf-table">
                         <thead>
                             <tr>
-                                <th style="width: 35%;">Descrição</th>
-                                <th style="width: 35%;">Detalhes</th>
-                                <th style="width: 8%; text-align: center;">Qtd</th>
-                                <th style="width: 11%; text-align: right;">Preço unitário</th>
-                                <th style="width: 11%; text-align: right;">Preço total</th>
+                                <th style="width: 55%; text-align: left;">Descrição</th>
+                                <th style="width: 15%; text-align: center;">Quantidade (QTD)</th>
+                                <th style="width: 15%; text-align: right;">Preço Unidade</th>
+                                <th style="width: 15%; text-align: right;">Preço total</th>
                             </tr>
                         </thead>
                         <tbody id="pdf-items-tbody">
@@ -92,31 +101,35 @@
                         </div>
                     </div>
                     
+                    <!-- Modern Metadata Grid -->
+                    <div class="pdf-grid-modern">
+                        <div class="pdf-grid-card">
+                            <strong>Vendedor:</strong>
+                            <span id="pdf-vendedor-val">Lucas</span>
+                        </div>
+                        <div class="pdf-grid-card">
+                            <strong>Validade da Proposta:</strong>
+                            <span id="pdf-validade-val">7 dias</span>
+                        </div>
+                        <div class="pdf-grid-card">
+                            <strong>Prazo de Entrega:</strong>
+                            <span id="pdf-prazo-val">A combinar</span>
+                        </div>
+                        <div class="pdf-grid-card">
+                            <strong>Cond. Pagamento:</strong>
+                            <span id="pdf-pagamento-val">A combinar</span>
+                        </div>
+                    </div>
+
                     <!-- Observações da Proposta Box -->
                     <div class="pdf-box">
-                        <div class="pdf-box-header">Observações da Proposta</div>
+                        <div class="pdf-box-header">Observações da Proposta:</div>
                         <div class="pdf-box-body" id="pdf-obs-text" style="white-space: pre-wrap;">Nenhuma</div>
                     </div>
 
-                    <!-- Meta Grid Table -->
-                    <table class="pdf-grid-table">
-                        <tr>
-                            <td class="pdf-grid-label">Vendedor</td>
-                            <td class="pdf-grid-value" id="pdf-vendedor-val">Rafael</td>
-                            <td class="pdf-grid-label">Validade da Proposta</td>
-                            <td class="pdf-grid-value" id="pdf-validade-val">7 dias</td>
-                        </tr>
-                        <tr>
-                            <td class="pdf-grid-label">Prazo de Entrega</td>
-                            <td class="pdf-grid-value" id="pdf-prazo-val">A combinar</td>
-                            <td class="pdf-grid-label">Cond. Pagamento</td>
-                            <td class="pdf-grid-value" id="pdf-pagamento-val">A combinar</td>
-                        </tr>
-                    </table>
-
-                    <!-- Formas de Pagamento Box -->
+                    <!-- Formas de Pagamento Box (Canto Inferior) -->
                     <div class="pdf-box">
-                        <div class="pdf-box-header">Formas de Pagamento</div>
+                        <div class="pdf-box-header">Forma de pagamento:</div>
                         <div class="pdf-box-body">
                             <p>• Pix: <strong>67.723.944/001-68</strong> — CNPJ — Nubank — Lucas Borsolli</p>
                             <p>• Cartão de Crédito: Parcelamento em até 3x sem juros (para valores acima de R$60,00)</p>
@@ -420,7 +433,7 @@
                                 <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div class="form-group">
                                         <label for="budget-vendedor-input">Vendedor</label>
-                                        <input type="text" id="budget-vendedor-input" value="Rafael">
+                                        <input type="text" id="budget-vendedor-input" value="Lucas">
                                     </div>
                                     <div class="form-group">
                                         <label for="budget-validade-input">Validade da Proposta</label>
@@ -573,8 +586,8 @@
     </button>
 
     <!-- Scripts -->
-    <script src="script.js?v=18"></script>
-    <script src="data.js?v=18"></script>
-    <script src="admin.js?v=18"></script>
+    <script src="script.js?v=19"></script>
+    <script src="data.js?v=19"></script>
+    <script src="admin.js?v=19"></script>
 </body>
 </html>

@@ -425,10 +425,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Metadata Sync
         const clientSelect = document.getElementById('budget-client-select');
         const pdfClientName = document.getElementById('pdf-client-name');
+        const pdfClientAddress = document.getElementById('pdf-client-address');
+        const pdfClientPhone = document.getElementById('pdf-client-phone');
+        const pdfClientEmail = document.getElementById('pdf-client-email');
         if (clientSelect && pdfClientName) {
             const clients = window.ForjaDB.getClients();
             const client = clients.find(c => c.id === clientSelect.value);
             pdfClientName.textContent = client ? client.name : "NENHUM SELECIONADO";
+            if (pdfClientAddress) pdfClientAddress.textContent = client ? client.address : "-";
+            if (pdfClientPhone) pdfClientPhone.textContent = client ? client.phone : "-";
+            if (pdfClientEmail) pdfClientEmail.textContent = client ? client.email : "-";
         }
 
         const dateInput = document.getElementById('budget-date-input');
@@ -466,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const vendedorInput = document.getElementById('budget-vendedor-input');
         const pdfVendedor = document.getElementById('pdf-vendedor-val');
         if (vendedorInput && pdfVendedor) {
-            pdfVendedor.textContent = vendedorInput.value || "Rafael";
+            pdfVendedor.textContent = vendedorInput.value || "Lucas";
         }
 
         const validadeInput = document.getElementById('budget-validade-input');
@@ -503,17 +509,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td></td>
                     </tr>
                 `).join('');
             } else {
                 let rowsHtml = budgetItens.map(item => {
                     const rowTotal = item.qty * item.value;
                     subtotal += rowTotal;
+                    
+                    let descHtml = `<strong>${item.service}</strong>`;
+                    if (item.details) {
+                        descHtml += `<div style="font-size: 0.65rem; color: #555; margin-top: 0.15rem; font-style: italic;">${item.details}</div>`;
+                    }
+                    
                     return `
                         <tr>
-                            <td>${item.service}</td>
-                            <td>${item.details || ''}</td>
+                            <td>${descHtml}</td>
                             <td style="text-align:center;">${item.qty}</td>
                             <td style="text-align:right;">${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                             <td style="text-align:right; font-weight:bold;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
@@ -526,7 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     rowsHtml += Array(5 - budgetItens.length).fill(0).map(() => `
                         <tr>
                             <td>&nbsp;</td>
-                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
