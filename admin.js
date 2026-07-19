@@ -243,7 +243,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tbody.innerHTML = inventory.map(p => `
             <tr data-id="${p.id}">
-                <td><span class="badge-brand">${p.brand}</span></td>
+                <td>
+                    ${p.image 
+                        ? `<img src="${p.image}" alt="Img" style="width:40px; height:40px; object-fit:cover; border-radius:4px; display:block; border:1px solid var(--border);">` 
+                        : `<span class="badge-brand">${p.brand}</span>`
+                    }
+                </td>
                 <td>
                     <strong>${p.name}</strong>
                     <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">
@@ -261,6 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td style="text-align:right; white-space:nowrap;">
                     <button class="sell-prod-btn" data-id="${p.id}" title="Registrar Venda" style="background:none; border:none; color:#25d366; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                         <i class="fa-solid fa-cart-shopping"></i> Vender
+                    </button>
+                    <button class="upload-img-btn" data-id="${p.id}" title="Adicionar Imagem" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
+                        <i class="fa-regular fa-image"></i>
                     </button>
                     <button class="delete-prod-btn" data-id="${p.id}" title="Excluir" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.5rem;">
                         <i class="fa-solid fa-trash-can"></i>
@@ -322,6 +330,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     alert("Estoque insuficiente para registrar esta venda!");
                 }
+            });
+        });
+
+        document.querySelectorAll('.upload-img-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if(!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const MAX = 200;
+                            let w = img.width; let h = img.height;
+                            if(w > h) { if(w > MAX) { h *= MAX/w; w = MAX; } }
+                            else { if(h > MAX) { w *= MAX/h; h = MAX; } }
+                            canvas.width = w; canvas.height = h;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, w, h);
+                            // Compress to WebP
+                            const webp = canvas.toDataURL('image/webp', 0.85);
+                            window.ForjaDB.updateProduct(id, { image: webp });
+                            renderInventoryTable();
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                };
+                input.click();
             });
         });
 
