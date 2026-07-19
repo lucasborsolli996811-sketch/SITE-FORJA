@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${products.map(p => `
                                 <div class="product-card">
                                     <div class="product-img-wrap">
-                                        ${p.image ? `<img src="${p.image}" alt="${p.name}" class="product-img" style="max-height:100%; width:100%; object-fit:contain;">` : `
+                                        ${p.image ? `<img src="${p.image}" alt="${p.name}" class="product-img" style="width:100%; height:100%; object-fit:contain; background-color: #ffffff; padding: 1rem;">` : `
                                             <div class="product-placeholder">
                                                 <i class="fa-solid fa-wrench"></i>
                                                 <span>Imagem em Breve</span>
