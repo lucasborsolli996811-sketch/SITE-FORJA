@@ -1171,7 +1171,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let pdfDate = document.getElementById('pdf-budget-date').textContent.trim();
             // Optional: format date to remove slashes if needed, but slashes might be replaced by the browser
             pdfDate = pdfDate.replace(/\//g, '-');
-            document.title = `Orçamento (${pdfNum} ${pdfDate})`;
+            document.title = `Orçamento ${pdfNum} ${pdfDate}`;
             
             // Trigger standard browser printing
             window.print();
@@ -1373,15 +1373,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // View PDF Button
+        // View PDF Button (Direct Download)
         document.querySelectorAll('.view-pdf-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const num = parseInt(btn.getAttribute('data-num'));
                 loadBudgetToEditor(num);
-                const adminSidebar = document.getElementById('admin-sidebar');
-                if (adminSidebar) {
-                    adminSidebar.classList.add('active-mobile-pdf');
-                }
+                
+                // Read the loaded data for the filename
+                const pdfNum = document.getElementById('pdf-budget-num').textContent.trim();
+                let pdfDate = document.getElementById('pdf-budget-date').textContent.trim();
+                pdfDate = pdfDate.replace(/\//g, '-');
+                
+                const originalTitle = document.title;
+                document.title = `Orçamento ${pdfNum} ${pdfDate}`;
+                
+                setTimeout(() => {
+                    window.print();
+                    document.title = originalTitle;
+                }, 100);
             });
         });
 
