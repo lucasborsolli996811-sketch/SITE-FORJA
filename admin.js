@@ -367,7 +367,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     reader.readAsDataURL(file);
                 };
                 input.click();
-            });        document.querySelectorAll('.delete-prod-btn').forEach(btn => {
+            });
+        });
+
+        document.querySelectorAll('.delete-prod-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
                 if (confirm('Tem certeza que deseja excluir este produto do estoque?')) {
@@ -401,7 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('add-product-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             });
-        });});
         });
     };
 
