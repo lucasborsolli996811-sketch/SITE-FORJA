@@ -686,6 +686,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     subtotal += rowTotal;
                     
                     let descHtml = `<strong>${item.service}</strong>`;
+                    if (item.prodDesc) {
+                        descHtml += `<div style="font-size: 0.65rem; color: #777; margin-top: 0.15rem;">${item.prodDesc}</div>`;
+                    }
                     if (item.details) {
                         descHtml += `<div style="font-size: 0.65rem; color: #555; margin-top: 0.15rem; font-style: italic;">${item.details}</div>`;
                     }
@@ -771,7 +774,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr>
                         <td>
                             <strong>${item.service}</strong>
-                            ${item.details ? `<div style="font-size:0.65rem; color:var(--text-muted);">${item.details}</div>` : ''}
+                            ${item.prodDesc ? `<div style="font-size:0.65rem; color:#777; margin-top: 0.1rem;">${item.prodDesc}</div>` : ''}
+                            ${item.details ? `<div style="font-size:0.65rem; color:var(--text-muted); font-style: italic;">${item.details}</div>` : ''}
                         </td>
                         <td style="text-align:center; font-size:0.75rem; color:var(--text-muted);">${item.ncm || '-'}</td>
                         <td style="text-align:center;">${displayQty}</td>
@@ -1040,16 +1044,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let ncm = '';
             let isBox = false;
+            let prodDesc = '';
             if (productId) {
                 const inventory = window.ForjaDB.getInventory();
                 const matchedTool = inventory.find(p => p.id === productId);
                 if (matchedTool) {
                     ncm = matchedTool.ncm || '';
                     isBox = matchedTool.isBox || false;
+                    prodDesc = matchedTool.desc || '';
                 }
             }
 
-            budgetItens.push({ service, details, type, value, qty, total: qty * value, productId, ncm, isBox });
+            budgetItens.push({ service, details, type, value, qty, total: qty * value, productId, ncm, isBox, prodDesc });
             
             // Reset item form inputs
             document.getElementById('budget-item-name').value = '';
