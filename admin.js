@@ -647,12 +647,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         descHtml += `<div style="font-size: 0.65rem; color: #555; margin-top: 0.15rem; font-style: italic;">${item.details}</div>`;
                     }
                     
+                    let displayQty = item.qty;
+                    let displayValue = item.value;
+                    
+                    if (item.type === 'tools' && !item.service.toLowerCase().includes('broca')) {
+                        displayQty = item.qty * 10;
+                        displayValue = item.value / 10;
+                    }
+                    
                     return `
                         <tr>
                             <td>${descHtml}</td>
                             <td style="text-align:center; font-size: 0.7rem;">${item.ncm || '-'}</td>
-                            <td style="text-align:center;">${item.qty}</td>
-                            <td style="text-align:right;">${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            <td style="text-align:center;">${displayQty}</td>
+                            <td style="text-align:right;">${displayValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                             <td style="text-align:right; font-weight:bold;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         </tr>
                     `;
@@ -710,6 +718,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 controlTbody.innerHTML = budgetItens.map((item, index) => {
                     const rowTotal = item.qty * item.value;
+                    
+                    let displayQty = item.qty;
+                    if (item.type === 'tools' && !item.service.toLowerCase().includes('broca')) {
+                        displayQty = item.qty * 10;
+                    }
+
                     return `
                     <tr>
                         <td>
@@ -717,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${item.details ? `<div style="font-size:0.65rem; color:var(--text-muted);">${item.details}</div>` : ''}
                         </td>
                         <td style="text-align:center; font-size:0.75rem; color:var(--text-muted);">${item.ncm || '-'}</td>
-                        <td style="text-align:center;">${item.qty}</td>
+                        <td style="text-align:center;">${displayQty}</td>
                         <td style="text-align:right;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         <td style="text-align:right;">
                             <button type="button" class="btn btn-ghost remove-item-btn" data-index="${index}" style="color:#ef4444; padding:0.25rem;">
