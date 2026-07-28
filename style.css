@@ -1722,7 +1722,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1.2fr 2fr;
+    grid-template-columns: 380px minmax(0, 1fr);
     gap: 2rem;
     align-items: start;
 }
