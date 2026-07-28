@@ -1114,8 +1114,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            // Set document title for PDF filename
+            const originalTitle = document.title;
+            const pdfNum = document.getElementById('pdf-budget-num').textContent.trim();
+            let pdfDate = document.getElementById('pdf-budget-date').textContent.trim();
+            // Optional: format date to remove slashes if needed, but slashes might be replaced by the browser
+            pdfDate = pdfDate.replace(/\//g, '-');
+            document.title = `Orçamento (${pdfNum} ${pdfDate})`;
+            
             // Trigger standard browser printing
             window.print();
+            
+            // Restore title
+            document.title = originalTitle;
         });
     }
 
@@ -1183,10 +1194,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="load-budget-btn" data-num="${b.number}" title="Abrir no Editor" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-folder-open"></i> Abrir
                         </button>
-                        `}
                         <button class="view-pdf-btn" data-num="${b.number}" title="Visualizar PDF" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-file-pdf"></i>
                         </button>
+                        `}
                         <button class="delete-budget-btn" data-num="${b.number}" title="Excluir Registro" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.5rem;">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
