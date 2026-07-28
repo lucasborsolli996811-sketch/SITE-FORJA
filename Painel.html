@@ -280,6 +280,7 @@
                         <div class="dashboard-panel-card">
                             <h3>Cadastrar Nova Ferramenta</h3>
                             <form id="add-product-form" style="margin-top:1.5rem;">
+                                <input type="hidden" id="prod-id" value="">
                                 <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div class="form-group">
                                         <label for="prod-brand">Marca</label>
@@ -321,6 +322,10 @@
                                 <div class="form-group">
                                     <label for="prod-img">Link da Imagem do Produto (Opcional)</label>
                                     <input type="url" id="prod-img" placeholder="http://exemplo.com/imagem.jpg">
+                                </div>
+                                <div class="form-group checkbox-group" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="prod-is-box" style="width: auto; margin:0;">
+                                    <label for="prod-is-box" style="margin: 0; cursor: pointer; color: var(--text-primary);">Este item é vendido em caixa (10 unidades)</label>
                                 </div>
                                 <button type="submit" class="btn btn-primary btn-full">
                                     <i class="fa-solid fa-plus"></i>

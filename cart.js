@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         <h3 class="product-name">${p.name}</h3>
                                         <p class="product-desc">${p.desc}</p>
                                         <p class="product-stock" style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 1rem;">
-                                            Disponível: <strong>${p.stock}</strong> unidades
+                                            Disponível: <strong>${p.stock}</strong> ${p.isBox ? 'caixa(s)' : 'unidade(s)'}
                                         </p>
                                         <div class="product-actions">
                                             <div class="qty-control">
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 <input type="number" class="qty-input" value="1" min="1" max="${p.stock}" step="1" data-id="${p.id}" readonly>
                                                 <button class="qty-btn qty-plus" data-id="${p.id}"><i class="fa-solid fa-plus"></i></button>
                                             </div>
-                                            <button class="btn btn-primary add-to-cart-btn" data-id="${p.id}" data-name="${p.name}" data-brand="${p.brand}" data-max="${p.stock}">
+                                            <button class="btn btn-primary add-to-cart-btn" data-id="${p.id}" data-name="${p.name}" data-brand="${p.brand}" data-max="${p.stock}" data-isbox="${p.isBox || false}">
                                                 <i class="fa-solid fa-cart-plus"></i>
                                                 <span>Adicionar</span>
                                             </button>
@@ -245,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = btn.getAttribute('data-name');
                 const brand = btn.getAttribute('data-brand');
                 const max = parseInt(btn.getAttribute('data-max')) || 0;
+                const isBox = btn.getAttribute('data-isbox') === 'true';
                 
                 const input = document.querySelector(`.qty-input[data-id="${id}"]`);
                 const qty = input ? (parseInt(input.value) || 1) : 1;
@@ -253,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const currentQtyInCart = existingItem ? existingItem.quantity : 0;
                 
                 if (currentQtyInCart + qty > max) {
-                    alert(`Desculpe, você já tem ${currentQtyInCart} itens no carrinho e o estoque limite é de ${max} unidades.`);
+                    alert(`Desculpe, você já tem ${currentQtyInCart} itens no carrinho e o estoque limite é de ${max} ${isBox ? 'caixas' : 'unidades'}.`);
                     if (input) input.value = 1;
                     return;
                 }
@@ -261,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (existingItem) {
                     existingItem.quantity += qty;
                 } else {
-                    cart.push({ id, name, brand, quantity: qty });
+                    cart.push({ id, name, brand, quantity: qty, isBox });
                 }
 
                 updateCartUI();
@@ -285,7 +286,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let text = "Olá! Gostaria de solicitar um orçamento para os seguintes itens da aba Usinagem:\n\n";
             cart.forEach(item => {
-                text += `• ${item.quantity}x ${item.name} (${item.brand})\n`;
+                const unitStr = item.isBox ? 'caixa(s)' : 'unidade(s)';
+                text += `• ${item.quantity} ${unitStr} de ${item.name} (${item.brand})\n`;
                 window.ForjaDB.registerQuote(item.id, item.quantity);
             });
             text += "\nAguardo o retorno. Obrigado!";
@@ -306,9 +308,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let body = "Prezada equipe Forja,\n\n";
             body += "Gostaria de solicitar um orçamento formal para os seguintes itens:\n\n";
             cart.forEach(item => {
+                const unitStr = item.isBox ? 'caixa(s)' : 'unidade(s)';
                 body += `Marca: ${item.brand}\n`;
                 body += `Produto: ${item.name}\n`;
-                body += `Quantidade: ${item.quantity} unidade(s)\n`;
+                body += `Quantidade: ${item.quantity} ${unitStr}\n`;
                 body += `------------------------------------\n`;
                 window.ForjaDB.registerQuote(item.id, item.quantity);
             });

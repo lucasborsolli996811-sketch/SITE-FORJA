@@ -267,6 +267,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="sell-prod-btn" data-id="${p.id}" title="Registrar Venda" style="background:none; border:none; color:#25d366; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                         <i class="fa-solid fa-cart-shopping"></i> Vender
                     </button>
+                    <button class="edit-prod-btn" data-id="${p.id}" title="Editar Produto" style="background:none; border:none; color:#f59e0b; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
                     <button class="upload-img-btn" data-id="${p.id}" title="Adicionar Imagem" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                         <i class="fa-regular fa-image"></i>
                     </button>
@@ -364,17 +367,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     reader.readAsDataURL(file);
                 };
                 input.click();
-            });
-        });
-
-        document.querySelectorAll('.delete-prod-btn').forEach(btn => {
+            });        document.querySelectorAll('.delete-prod-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
-                if (confirm("Deseja realmente excluir este produto?")) {
+                if (confirm('Tem certeza que deseja excluir este produto do estoque?')) {
                     window.ForjaDB.deleteProduct(id);
                     renderDashboard();
                 }
             });
+        });
+
+        document.querySelectorAll('.edit-prod-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const inventory = window.ForjaDB.getInventory();
+                const p = inventory.find(prod => prod.id === id);
+                if (p) {
+                    if (document.getElementById('prod-id')) document.getElementById('prod-id').value = p.id;
+                    document.getElementById('prod-brand').value = p.brand;
+                    document.getElementById('prod-name').value = p.name;
+                    document.getElementById('prod-desc').value = p.desc;
+                    document.getElementById('prod-stock').value = p.stock;
+                    document.getElementById('prod-buy-link').value = p.buyLink || '';
+                    document.getElementById('prod-buy-price').value = p.buyPrice || 0;
+                    document.getElementById('prod-sell-price').value = p.sellPrice || 0;
+                    document.getElementById('prod-img').value = p.image || p.img || '';
+                    if (document.getElementById('prod-ncm')) document.getElementById('prod-ncm').value = p.ncm || '';
+                    if (document.getElementById('prod-is-box')) document.getElementById('prod-is-box').checked = p.isBox || false;
+                    
+                    const submitBtn = document.getElementById('add-product-form').querySelector('button[type="submit"] span');
+                    if (submitBtn) submitBtn.textContent = "Atualizar Produto";
+                    
+                    document.getElementById('add-product-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });});
         });
     };
 
@@ -392,12 +419,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const sellPrice = parseFloat(document.getElementById('prod-sell-price').value) || 0;
             const img = document.getElementById('prod-img').value.trim();
             const ncm = document.getElementById('prod-ncm') ? document.getElementById('prod-ncm').value.trim() : '';
+            const isBox = document.getElementById('prod-is-box') ? document.getElementById('prod-is-box').checked : false;
+            const prodId = document.getElementById('prod-id') ? document.getElementById('prod-id').value : '';
 
-            const newProduct = { brand, name, desc, stock, buyLink, buyPrice, sellPrice, img, ncm };
-            window.ForjaDB.addProduct(newProduct);
+            const newProduct = { brand, name, desc, stock, buyLink, buyPrice, sellPrice, img, ncm, isBox };
+            
+            if (prodId) {
+                window.ForjaDB.updateProduct(prodId, newProduct);
+                alert("Ferramenta atualizada com sucesso!");
+                
+                // Reset button text
+                const submitBtn = addProductForm.querySelector('button[type="submit"] span');
+                if(submitBtn) submitBtn.textContent = "Cadastrar Produto";
+            } else {
+                window.ForjaDB.addProduct(newProduct);
+                alert("Ferramenta cadastrada com sucesso!");
+            }
+            
             addProductForm.reset();
+            if (document.getElementById('prod-id')) document.getElementById('prod-id').value = '';
             renderDashboard();
-            alert("Ferramenta cadastrada com sucesso!");
         });
     }
 
@@ -647,12 +688,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         descHtml += `<div style="font-size: 0.65rem; color: #555; margin-top: 0.15rem; font-style: italic;">${item.details}</div>`;
                     }
                     
+                    let displayQty = item.qty;
+                    let displayValue = item.value;
+                    
+                    if (item.isBox) {
+                        displayQty = item.qty * 10;
+                        displayValue = item.value / 10;
+                    }
+                    
                     return `
                         <tr>
                             <td>${descHtml}</td>
                             <td style="text-align:center; font-size: 0.7rem;">${item.ncm || '-'}</td>
-                            <td style="text-align:center;">${item.qty}</td>
-                            <td style="text-align:right;">${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                            <td style="text-align:center;">${displayQty}</td>
+                            <td style="text-align:right;">${displayValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                             <td style="text-align:right; font-weight:bold;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         </tr>
                     `;
@@ -710,6 +759,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 controlTbody.innerHTML = budgetItens.map((item, index) => {
                     const rowTotal = item.qty * item.value;
+                    
+                    let displayQty = item.qty;
+                    if (item.isBox) {
+                        displayQty = item.qty * 10;
+                    }
+
                     return `
                     <tr>
                         <td>
@@ -717,7 +772,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${item.details ? `<div style="font-size:0.65rem; color:var(--text-muted);">${item.details}</div>` : ''}
                         </td>
                         <td style="text-align:center; font-size:0.75rem; color:var(--text-muted);">${item.ncm || '-'}</td>
-                        <td style="text-align:center;">${item.qty}</td>
+                        <td style="text-align:center;">${displayQty}</td>
                         <td style="text-align:right;">${rowTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                         <td style="text-align:right;">
                             <button type="button" class="btn btn-ghost remove-item-btn" data-index="${index}" style="color:#ef4444; padding:0.25rem;">
@@ -982,15 +1037,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const productId = (type === 'tools' && toolSelect) ? toolSelect.value : null;
             
             let ncm = '';
+            let isBox = false;
             if (productId) {
                 const inventory = window.ForjaDB.getInventory();
                 const matchedTool = inventory.find(p => p.id === productId);
-                if (matchedTool && matchedTool.ncm) {
-                    ncm = matchedTool.ncm;
+                if (matchedTool) {
+                    ncm = matchedTool.ncm || '';
+                    isBox = matchedTool.isBox || false;
                 }
             }
 
-            budgetItens.push({ service, details, type, value, qty, total: qty * value, productId, ncm });
+            budgetItens.push({ service, details, type, value, qty, total: qty * value, productId, ncm, isBox });
             
             // Reset item form inputs
             document.getElementById('budget-item-name').value = '';
