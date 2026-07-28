@@ -2497,7 +2497,7 @@ h1, h2, h3, h4, h5, h6 {
 .pdf-totals-row {
     display: flex;
     justify-content: flex-end;
-    width: 250px;
+    width: 320px;
     margin-bottom: 0.15rem;
 }
 .pdf-totals-label {
@@ -2508,7 +2508,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .pdf-totals-value {
     text-align: right;
-    width: 100px;
+    width: 140px;
     padding-right: 0.5rem;
 }
 .pdf-totals-final {
