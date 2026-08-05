@@ -1296,9 +1296,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (item.type === 'tools' && item.productId) {
                             const product = inventory.find(p => p.id === item.productId);
                             if (!product) continue;
-                            if (product.stock < item.qty) {
+                            
+                            let requiredQty = item.qty;
+                            if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                requiredQty = item.qty / 10;
+                            }
+                            
+                            if (product.stock < requiredQty) {
                                 stockError = true;
-                                errorMessage += `Produto: ${product.name} (Disponível: ${product.stock}, Necessário: ${item.qty})\n`;
+                                errorMessage += `Produto: ${product.name} (Disponível: ${product.stock}, Necessário: ${requiredQty})\n`;
                             }
                         }
                     }
@@ -1312,7 +1318,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Deduct stock
                     for (const item of budget.itens) {
                         if (item.type === 'tools' && item.productId) {
-                            window.ForjaDB.registerSale(item.productId, item.qty);
+                            const product = inventory.find(p => p.id === item.productId);
+                            let deductQty = item.qty;
+                            if (product && !item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                deductQty = item.qty / 10;
+                            }
+                            window.ForjaDB.registerSale(item.productId, deductQty);
                         }
                     }
                     budget.stockDeducted = true;
@@ -1333,8 +1344,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (item.type === 'tools' && item.productId) {
                             const product = inventory.find(p => p.id === item.productId);
                             if (product) {
-                                product.stock = (product.stock || 0) + item.qty;
-                                product.soldCount = Math.max(0, (product.soldCount || 0) - item.qty);
+                                let revertQty = item.qty;
+                                if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                    revertQty = item.qty / 10;
+                                }
+                                product.stock = (product.stock || 0) + revertQty;
+                                product.soldCount = Math.max(0, (product.soldCount || 0) - revertQty);
                             }
                         }
                     }
