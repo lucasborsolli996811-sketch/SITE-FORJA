@@ -1229,12 +1229,41 @@ document.addEventListener('DOMContentLoaded', () => {
             const isFaturado = b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO';
             const isParcial = b.status === 'FATURAMENTO PARCIAL';
             
+            let partialBillingHtml = '';
+            if (isParcial || isFaturado) {
+                let partialValue = 0;
+                let partialItems = [];
+                (b.itens || []).forEach(item => {
+                    const billed = item.faturadoQty || 0;
+                    if (billed > 0) {
+                        partialValue += billed * (item.value || 0);
+                        partialItems.push(`${billed}x ${item.service}`);
+                    }
+                });
+
+                if (partialValue > 0 && isParcial) {
+                    const partialBRL = partialValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const partialDesc = partialItems.join(', ');
+                    partialBillingHtml = `
+                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.75rem; color: var(--accent);">
+                            <div style="font-weight: 600;">Faturado: ${partialBRL}</div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 0.1rem; max-width: 150px; white-space: normal; line-height: 1.2;" title="${partialDesc}">
+                                ${partialDesc}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
             return `
                 <tr data-num="${b.number}">
                     <td><strong>#${b.number}</strong></td>
                     <td><strong>${b.clientName}</strong></td>
                     <td>${datesHtml}</td>
-                    <td style="text-align:right; font-weight:bold; color:var(--text-primary);">${totalBRL}</td>
+                    <td style="text-align:right;">
+                        <div style="font-weight:bold; color:var(--text-primary);">${totalBRL}</div>
+                        ${partialBillingHtml}
+                    </td>
                     <td style="text-align:center;">
                         <select class="status-select" data-num="${b.number}" ${isFaturado ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:${isFaturado ? 'not-allowed' : 'pointer'}; opacity:${isFaturado ? '0.75' : '1'};">
                             <option value="EM ABERTO" ${b.status === 'EM ABERTO' ? 'selected' : ''}>EM ABERTO</option>
