@@ -1278,14 +1278,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             <i class="fa-solid fa-arrow-rotate-left"></i> Estornar
                         </button>
                         ` : ''}
-                        ${!isFaturado ? `
                         <button class="load-budget-btn" data-num="${b.number}" title="Abrir no Editor" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-folder-open"></i> Abrir
                         </button>
                         <button class="view-pdf-btn" data-num="${b.number}" title="Visualizar PDF" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-file-pdf"></i>
                         </button>
-                        ` : ''}
                         <button class="delete-budget-btn" data-num="${b.number}" title="Excluir Registro" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.5rem;">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
