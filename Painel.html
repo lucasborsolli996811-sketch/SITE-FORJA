@@ -621,5 +621,41 @@
     
     <script src="data.js?v=29"></script>
     <script src="admin.js?v=31"></script>
+    <!-- Partial Billing Modal -->
+    <div class="modal-overlay" id="partial-billing-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 10000; padding: 1rem;">
+        <div class="dashboard-panel-card" style="width: 100%; max-width: 600px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-boxes-packing" style="color: var(--accent);"></i> Faturamento Parcial</h3>
+                <button type="button" id="close-partial-modal" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div style="padding: 1.5rem 0; flex: 1; overflow-y: auto;">
+                <p style="margin-top: 0; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                    Selecione a quantidade de cada item que deseja faturar agora. O estoque será deduzido apenas para os itens informados.
+                </p>
+                <div class="inventory-table-wrap">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th style="text-align:center;">Qtd. Total</th>
+                                <th style="text-align:center;">Faturado</th>
+                                <th style="text-align:center; width: 100px;">Faturar Agora</th>
+                            </tr>
+                        </thead>
+                        <tbody id="partial-billing-tbody">
+                            <!-- Dynamic Items -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                <button type="button" class="btn btn-ghost" id="cancel-partial-modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirm-partial-billing">Confirmar Faturamento</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

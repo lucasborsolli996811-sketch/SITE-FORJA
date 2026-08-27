@@ -1209,6 +1209,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sDatePart = sDate && sDate.includes('T') ? sDate.split('T')[0] : sDate;
                 const sDateFormatted = sDatePart ? sDatePart.split('-').reverse().join('/') : '-';
                 statusDateLine = `<div style="font-size:0.75rem; color:#25d366; margin-top:0.2rem;" title="Data do Faturamento"><i class="fa-solid fa-circle-check"></i> Faturado: ${sDateFormatted}</div>`;
+            } else if (b.status === 'FATURAMENTO PARCIAL') {
+                const sDate = b.statusDate || b.date;
+                const sDatePart = sDate && sDate.includes('T') ? sDate.split('T')[0] : sDate;
+                const sDateFormatted = sDatePart ? sDatePart.split('-').reverse().join('/') : '-';
+                statusDateLine = `<div style="font-size:0.75rem; color:var(--accent); margin-top:0.2rem;" title="Faturamento Parcial"><i class="fa-solid fa-box-open"></i> Parcial: ${sDateFormatted}</div>`;
             } else if (b.status === 'ORÇAMENTO PERDIDO') {
                 const sDate = b.statusDate || b.date;
                 const sDatePart = sDate && sDate.includes('T') ? sDate.split('T')[0] : sDate;
@@ -1222,6 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             const isFaturado = b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO';
+            const isParcial = b.status === 'FATURAMENTO PARCIAL';
             
             return `
                 <tr data-num="${b.number}">
@@ -1232,23 +1238,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="text-align:center;">
                         <select class="status-select" data-num="${b.number}" ${isFaturado ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:${isFaturado ? 'not-allowed' : 'pointer'}; opacity:${isFaturado ? '0.75' : '1'};">
                             <option value="EM ABERTO" ${b.status === 'EM ABERTO' ? 'selected' : ''}>EM ABERTO</option>
+                            <option value="FATURAMENTO PARCIAL" ${isParcial ? 'selected' : ''} style="color:var(--accent);">PARCIAL</option>
                             <option value="PRODUTO FATURADO" ${isFaturado ? 'selected' : ''} style="color:#25d366;">FATURADO</option>
                             <option value="ORÇAMENTO PERDIDO" ${b.status === 'ORÇAMENTO PERDIDO' ? 'selected' : ''} style="color:#ef4444;">PERDIDO</option>
                         </select>
                     </td>
                     <td style="text-align:right; white-space:nowrap;">
-                        ${isFaturado ? `
+                        ${(isFaturado || isParcial) ? `
                         <button class="revert-budget-btn" data-num="${b.number}" title="Estornar e Liberar Edição" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.85rem; font-weight:600; padding:0.5rem; margin-right:0.25rem; font-family:var(--font-heading);">
                             <i class="fa-solid fa-arrow-rotate-left"></i> Estornar
                         </button>
-                        ` : `
+                        ` : ''}
+                        ${!isFaturado ? `
                         <button class="load-budget-btn" data-num="${b.number}" title="Abrir no Editor" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-folder-open"></i> Abrir
                         </button>
                         <button class="view-pdf-btn" data-num="${b.number}" title="Visualizar PDF" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-file-pdf"></i>
                         </button>
-                        `}
+                        ` : ''}
                         <button class="delete-budget-btn" data-num="${b.number}" title="Excluir Registro" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.5rem;">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
@@ -1282,74 +1290,220 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const budget = budgets[budgetIdx];
-                const wasPurchased = budget.status === 'PRODUTO COMPRADO' || budget.status === 'PRODUTO FATURADO' || budget.stockDeducted === true;
-                const isPurchasing = newStatus === 'PRODUTO FATURADO' || newStatus === 'PRODUTO COMPRADO';
+                const wasPurchased = budget.status === 'PRODUTO COMPRADO' || budget.status === 'PRODUTO FATURADO' || budget.status === 'FATURAMENTO PARCIAL' || budget.stockDeducted === true;
+                
+                if (newStatus === 'FATURAMENTO PARCIAL') {
+                    // Open Modal
+                    const modal = document.getElementById('partial-billing-modal');
+                    const tbody = document.getElementById('partial-billing-tbody');
+                    
+                    if (!modal || !tbody) {
+                        alert("Erro de interface: Modal não encontrado.");
+                        select.value = oldValue;
+                        return;
+                    }
 
-                if (isPurchasing && !wasPurchased) {
-                    // Check stock first
+                    // Populate rows
+                    tbody.innerHTML = '';
+                    let hasTools = false;
+                    budget.itens.forEach((item, index) => {
+                        if (item.type === 'tools' && item.productId) {
+                            hasTools = true;
+                            const totalQty = item.qty;
+                            const billedQty = item.faturadoQty || 0;
+                            const remaining = Math.max(0, totalQty - billedQty);
+                            
+                            tbody.innerHTML += `
+                                <tr data-index="${index}" data-product-id="${item.productId}">
+                                    <td><strong>${item.service}</strong></td>
+                                    <td style="text-align:center;">${totalQty}</td>
+                                    <td style="text-align:center;">${billedQty}</td>
+                                    <td style="text-align:center;">
+                                        <input type="number" class="partial-qty-input" min="0" max="${remaining}" value="${remaining}" style="width:100%; padding:0.25rem; text-align:center; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem;" ${remaining === 0 ? 'disabled' : ''}>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    });
+
+                    if (!hasTools) {
+                        alert("Este orçamento não possui ferramentas (itens de estoque) para faturar.");
+                        select.value = oldValue;
+                        return;
+                    }
+
+                    modal.style.display = 'flex';
+
+                    // Cancel Button
+                    const cancelBtn = document.getElementById('cancel-partial-modal');
+                    cancelBtn.onclick = () => {
+                        modal.style.display = 'none';
+                        select.value = oldValue;
+                    };
+
+                    const closeBtn = document.getElementById('close-partial-modal');
+                    closeBtn.onclick = cancelBtn.onclick;
+
+                    // Confirm Button
+                    const confirmBtn = document.getElementById('confirm-partial-billing');
+                    confirmBtn.onclick = () => {
+                        const inputs = tbody.querySelectorAll('.partial-qty-input');
+                        const inventory = window.ForjaDB.getInventory();
+                        let stockError = false;
+                        let errorMessage = "";
+                        let updates = [];
+
+                        inputs.forEach(input => {
+                            const tr = input.closest('tr');
+                            const idx = parseInt(tr.getAttribute('data-index'));
+                            const item = budget.itens[idx];
+                            const product = inventory.find(p => p.id === item.productId);
+                            
+                            let qtyToBill = parseInt(input.value) || 0;
+                            if (qtyToBill <= 0) return;
+
+                            if (!product) return;
+
+                            let requiredStock = qtyToBill;
+                            if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                // Legacy compatibility for partial
+                                requiredStock = qtyToBill / 10;
+                            }
+
+                            if (product.stock < requiredStock) {
+                                stockError = true;
+                                errorMessage += `Produto: ${product.name} (Disponível: ${product.stock}, Necessário: ${requiredStock})\n`;
+                            } else {
+                                updates.push({ idx, qtyToBill, requiredStock });
+                            }
+                        });
+
+                        if (stockError) {
+                            alert("Estoque insuficiente para as quantidades solicitadas!\n\n" + errorMessage);
+                            return;
+                        }
+
+                        if (updates.length === 0) {
+                            alert("Nenhuma quantidade inserida para faturar.");
+                            return;
+                        }
+
+                        // Apply Updates
+                        let allFullyBilled = true;
+                        updates.forEach(upd => {
+                            const item = budget.itens[upd.idx];
+                            window.ForjaDB.registerSale(item.productId, upd.requiredStock);
+                            item.faturadoQty = (item.faturadoQty || 0) + upd.qtyToBill;
+                        });
+
+                        // Check if all tools are fully billed
+                        budget.itens.forEach(item => {
+                            if (item.type === 'tools' && item.productId) {
+                                if ((item.faturadoQty || 0) < item.qty) {
+                                    allFullyBilled = false;
+                                }
+                            }
+                        });
+
+                        budget.stockDeducted = allFullyBilled ? true : 'partial';
+                        budget.status = allFullyBilled ? 'PRODUTO FATURADO' : 'FATURAMENTO PARCIAL';
+                        budget.statusDate = new Date().toISOString();
+                        
+                        window.ForjaDB.updateBudgetFull(num, {
+                            itens: budget.itens,
+                            stockDeducted: budget.stockDeducted,
+                            status: budget.status,
+                            statusDate: budget.statusDate
+                        });
+
+                        alert(`Faturamento parcial registrado! Status: ${budget.status}`);
+                        modal.style.display = 'none';
+                        renderDashboard();
+                        oldValue = budget.status;
+                        renderBudgetsHistory();
+                    };
+                    return;
+                }
+
+                const isPurchasingFull = newStatus === 'PRODUTO FATURADO' || newStatus === 'PRODUTO COMPRADO';
+
+                if (isPurchasingFull && !wasPurchased) {
+                    // FULL BILLING (or completing partial)
                     const inventory = window.ForjaDB.getInventory();
                     let stockError = false;
                     let errorMessage = "";
+                    let updates = [];
 
-                    // Validate stock
                     for (const item of budget.itens) {
                         if (item.type === 'tools' && item.productId) {
                             const product = inventory.find(p => p.id === item.productId);
                             if (!product) continue;
                             
-                            let requiredQty = item.qty;
-                            if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
-                                requiredQty = item.qty / 10;
-                            }
-                            
-                            if (product.stock < requiredQty) {
-                                stockError = true;
-                                errorMessage += `Produto: ${product.name} (Disponível: ${product.stock}, Necessário: ${requiredQty})\n`;
+                            const totalQty = item.qty;
+                            const billedQty = item.faturadoQty || 0;
+                            const remaining = Math.max(0, totalQty - billedQty);
+
+                            if (remaining > 0) {
+                                let requiredStock = remaining;
+                                if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                    requiredStock = remaining / 10;
+                                }
+                                
+                                if (product.stock < requiredStock) {
+                                    stockError = true;
+                                    errorMessage += `Produto: ${product.name} (Disponível: ${product.stock}, Necessário: ${requiredStock})\n`;
+                                } else {
+                                    updates.push({ item, remaining, requiredStock });
+                                }
                             }
                         }
                     }
 
                     if (stockError) {
-                        alert("Estoque insuficiente para faturar este orçamento!\n\n" + errorMessage);
+                        alert("Estoque insuficiente para faturar o restante deste orçamento!\n\n" + errorMessage);
                         select.value = oldValue;
                         return;
                     }
 
                     // Deduct stock
-                    for (const item of budget.itens) {
-                        if (item.type === 'tools' && item.productId) {
-                            const product = inventory.find(p => p.id === item.productId);
-                            let deductQty = item.qty;
-                            if (product && !item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
-                                deductQty = item.qty / 10;
-                            }
-                            window.ForjaDB.registerSale(item.productId, deductQty);
-                        }
-                    }
+                    updates.forEach(upd => {
+                        window.ForjaDB.registerSale(upd.item.productId, upd.requiredStock);
+                        upd.item.faturadoQty = (upd.item.faturadoQty || 0) + upd.remaining;
+                    });
+
                     budget.stockDeducted = true;
                     budget.status = 'PRODUTO FATURADO';
                     budget.statusDate = new Date().toISOString();
+                    
                     window.ForjaDB.updateBudgetFull(num, {
+                        itens: budget.itens,
                         stockDeducted: true,
                         status: 'PRODUTO FATURADO',
                         statusDate: budget.statusDate
                     });
                     alert(`Orçamento #${num} finalizado! Estoque atualizado no catálogo.`);
-                    renderDashboard(); // Refresh stocks & dashboard metrics!
+                    renderDashboard(); 
 
-                } else if (!isPurchasing && wasPurchased) {
+                } else if (!isPurchasingFull && wasPurchased && (newStatus === 'EM ABERTO' || newStatus === 'ORÇAMENTO PERDIDO')) {
                     // Revert stock (returning products back to inventory)
                     const inventory = window.ForjaDB.getInventory();
                     for (const item of budget.itens) {
                         if (item.type === 'tools' && item.productId) {
                             const product = inventory.find(p => p.id === item.productId);
                             if (product) {
-                                let revertQty = item.qty;
-                                if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
-                                    revertQty = item.qty / 10;
+                                // If faturadoQty exists, use it. Otherwise assume all were billed.
+                                let billedUnits = item.faturadoQty !== undefined ? item.faturadoQty : item.qty;
+                                
+                                if (billedUnits > 0) {
+                                    let revertStock = billedUnits;
+                                    if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                        revertStock = billedUnits / 10;
+                                    }
+                                    product.stock = (product.stock || 0) + revertStock;
+                                    product.soldCount = Math.max(0, (product.soldCount || 0) - revertStock);
                                 }
-                                product.stock = (product.stock || 0) + revertQty;
-                                product.soldCount = Math.max(0, (product.soldCount || 0) - revertQty);
+                                // Reset faturadoQty
+                                item.faturadoQty = 0;
                             }
                         }
                     }
@@ -1357,7 +1511,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     budget.stockDeducted = false;
                     budget.status = newStatus;
                     budget.statusDate = newStatus === 'ORÇAMENTO PERDIDO' ? new Date().toISOString() : null;
+                    
                     window.ForjaDB.updateBudgetFull(num, {
+                        itens: budget.itens,
                         stockDeducted: false,
                         status: newStatus,
                         statusDate: budget.statusDate
@@ -1366,7 +1522,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderDashboard();
 
                 } else {
-                    // Simple status update (EM ABERTO <-> PERDIDO)
+                    // Simple status update (EM ABERTO <-> PERDIDO) without stock change
                     budget.status = newStatus;
                     budget.statusDate = newStatus === 'ORÇAMENTO PERDIDO' ? new Date().toISOString() : null;
                     window.ForjaDB.updateBudgetFull(num, {
