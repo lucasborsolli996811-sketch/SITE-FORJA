@@ -1389,7 +1389,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td style="text-align:center;">${totalQty}</td>
                                 <td style="text-align:center;">${billedQty}</td>
                                 <td style="text-align:center;">
-                                    <input type="number" class="partial-qty-input" min="0" max="${remaining}" value="${remaining}" style="width:100%; padding:0.25rem; text-align:center; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem;" ${remaining === 0 ? 'disabled' : ''}>
+                                    <input type="number" class="partial-qty-input" min="0" max="${remaining}" value="0" style="width:100%; padding:0.25rem; text-align:center; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem;" ${remaining === 0 ? 'disabled' : ''}>
                                 </td>
                             </tr>
                         `;
@@ -1682,20 +1682,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (budgetIdx === -1) return;
                 
                 const budget = budgets[budgetIdx];
-                const wasPurchased = budget.status === 'PRODUTO COMPRADO' || budget.status === 'PRODUTO FATURADO' || budget.stockDeducted === true;
+                const wasPurchased = budget.status === 'PRODUTO COMPRADO' || budget.status === 'PRODUTO FATURADO' || budget.status === 'FATURAMENTO PARCIAL' || budget.stockDeducted === true || budget.stockDeducted === 'partial';
                 
                 if (wasPurchased) {
                     // Revert stock
                     const inventory = window.ForjaDB.getInventory();
                     for (const item of budget.itens) {
-                        if (item.type === 'tools' && item.productId) {
+                        let billedUnits = item.faturadoQty !== undefined ? item.faturadoQty : item.qty;
+                        
+                        if (billedUnits > 0 && item.type === 'tools' && item.productId) {
                             const product = inventory.find(p => p.id === item.productId);
                             if (product) {
-                                const newStock = (product.stock || 0) + item.qty;
-                                const newSoldCount = Math.max(0, (product.soldCount || 0) - item.qty);
+                                let revertStock = billedUnits;
+                                if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                    revertStock = billedUnits / 10;
+                                }
+                                const newStock = (product.stock || 0) + revertStock;
+                                const newSoldCount = Math.max(0, (product.soldCount || 0) - revertStock);
                                 window.ForjaDB.updateProduct(product.id, { stock: newStock, soldCount: newSoldCount });
                             }
                         }
+                        // Reset faturadoQty
+                        item.faturadoQty = 0;
                     }
                 }
                 
