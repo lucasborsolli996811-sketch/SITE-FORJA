@@ -387,6 +387,25 @@ function getDashboardStats() {
         totalProfit += sold * (sell - buy);
     });
     
+    // Add revenue from non-stock items (services, 3D prints, projects)
+    const budgets = getBudgets();
+    let serviceRevenue = 0;
+    budgets.forEach(b => {
+        if (b.status === 'PRODUTO FATURADO' || b.status === 'FATURAMENTO PARCIAL') {
+            (b.itens || []).forEach(item => {
+                if (item.type !== 'tools') {
+                    let billed = item.faturadoQty !== undefined ? item.faturadoQty : (b.status === 'PRODUTO FATURADO' ? item.qty : 0);
+                    if (billed > 0) {
+                        serviceRevenue += billed * (item.value || 0);
+                    }
+                }
+            });
+        }
+    });
+    
+    totalRevenue += serviceRevenue;
+    totalProfit += serviceRevenue;
+    
     const topSold = [...inventory]
         .filter(p => p.soldCount > 0)
         .sort((a, b) => b.soldCount - a.soldCount)
