@@ -1332,29 +1332,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Populate rows
                     tbody.innerHTML = '';
-                    let hasTools = false;
+                    let hasItems = false;
                     budget.itens.forEach((item, index) => {
-                        if (item.type === 'tools' && item.productId) {
-                            hasTools = true;
-                            const totalQty = item.qty;
-                            const billedQty = item.faturadoQty || 0;
-                            const remaining = Math.max(0, totalQty - billedQty);
-                            
-                            tbody.innerHTML += `
-                                <tr data-index="${index}" data-product-id="${item.productId}">
-                                    <td><strong>${item.service}</strong></td>
-                                    <td style="text-align:center;">${totalQty}</td>
-                                    <td style="text-align:center;">${billedQty}</td>
-                                    <td style="text-align:center;">
-                                        <input type="number" class="partial-qty-input" min="0" max="${remaining}" value="${remaining}" style="width:100%; padding:0.25rem; text-align:center; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem;" ${remaining === 0 ? 'disabled' : ''}>
-                                    </td>
-                                </tr>
-                            `;
-                        }
+                        hasItems = true;
+                        const totalQty = item.qty;
+                        const billedQty = item.faturadoQty || 0;
+                        const remaining = Math.max(0, totalQty - billedQty);
+                        
+                        tbody.innerHTML += `
+                            <tr data-index="${index}">
+                                <td><strong>${item.service}</strong></td>
+                                <td style="text-align:center;">${totalQty}</td>
+                                <td style="text-align:center;">${billedQty}</td>
+                                <td style="text-align:center;">
+                                    <input type="number" class="partial-qty-input" min="0" max="${remaining}" value="${remaining}" style="width:100%; padding:0.25rem; text-align:center; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem;" ${remaining === 0 ? 'disabled' : ''}>
+                                </td>
+                            </tr>
+                        `;
                     });
 
-                    if (!hasTools) {
-                        alert("Este orçamento não possui ferramentas (itens de estoque) para faturar.");
+                    if (!hasItems) {
+                        alert("Este orçamento não possui itens para faturar.");
                         select.value = oldValue;
                         return;
                     }
@@ -1384,24 +1382,28 @@ document.addEventListener('DOMContentLoaded', () => {
                             const tr = input.closest('tr');
                             const idx = parseInt(tr.getAttribute('data-index'));
                             const item = budget.itens[idx];
-                            const product = inventory.find(p => p.id === item.productId);
                             
                             let qtyToBill = parseInt(input.value) || 0;
                             if (qtyToBill <= 0) return;
 
-                            if (!product) return;
+                            if (item.type === 'tools' && item.productId) {
+                                const product = inventory.find(p => p.id === item.productId);
+                                if (!product) return;
 
-                            let requiredStock = qtyToBill;
-                            if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
-                                // Legacy compatibility for partial
-                                requiredStock = qtyToBill / 10;
-                            }
+                                let requiredStock = qtyToBill;
+                                if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                    // Legacy compatibility for partial
+                                    requiredStock = qtyToBill / 10;
+                                }
 
-                            if (product.stock < requiredStock) {
-                                stockError = true;
-                                errorMessage += `Produto: ${product.name} (Disponível: ${product.stock}, Necessário: ${requiredStock})\n`;
+                                if (product.stock < requiredStock) {
+                                    stockError = true;
+                                    errorMessage += `Produto: ${product.name} (Disponível: ${product.stock}, Necessário: ${requiredStock})\n`;
+                                } else {
+                                    updates.push({ idx, qtyToBill, requiredStock, productType: 'tools' });
+                                }
                             } else {
-                                updates.push({ idx, qtyToBill, requiredStock });
+                                updates.push({ idx, qtyToBill, requiredStock: 0, productType: 'other' });
                             }
                         });
 
@@ -1419,16 +1421,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         let allFullyBilled = true;
                         updates.forEach(upd => {
                             const item = budget.itens[upd.idx];
-                            window.ForjaDB.registerSale(item.productId, upd.requiredStock);
+                            if (upd.productType === 'tools') {
+                                window.ForjaDB.registerSale(item.productId, upd.requiredStock);
+                            }
                             item.faturadoQty = (item.faturadoQty || 0) + upd.qtyToBill;
                         });
 
-                        // Check if all tools are fully billed
+                        // Check if all items are fully billed
                         budget.itens.forEach(item => {
-                            if (item.type === 'tools' && item.productId) {
-                                if ((item.faturadoQty || 0) < item.qty) {
-                                    allFullyBilled = false;
-                                }
+                            if ((item.faturadoQty || 0) < item.qty) {
+                                allFullyBilled = false;
                             }
                         });
 
@@ -1462,15 +1464,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     let updates = [];
 
                     for (const item of budget.itens) {
-                        if (item.type === 'tools' && item.productId) {
-                            const product = inventory.find(p => p.id === item.productId);
-                            if (!product) continue;
-                            
-                            const totalQty = item.qty;
-                            const billedQty = item.faturadoQty || 0;
-                            const remaining = Math.max(0, totalQty - billedQty);
+                        const totalQty = item.qty;
+                        const billedQty = item.faturadoQty || 0;
+                        const remaining = Math.max(0, totalQty - billedQty);
 
-                            if (remaining > 0) {
+                        if (remaining > 0) {
+                            if (item.type === 'tools' && item.productId) {
+                                const product = inventory.find(p => p.id === item.productId);
+                                if (!product) continue;
+                                
                                 let requiredStock = remaining;
                                 if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
                                     requiredStock = remaining / 10;
@@ -1480,8 +1482,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     stockError = true;
                                     errorMessage += `Produto: ${product.name} (Disponível: ${product.stock}, Necessário: ${requiredStock})\n`;
                                 } else {
-                                    updates.push({ item, remaining, requiredStock });
+                                    updates.push({ item, remaining, requiredStock, productType: 'tools' });
                                 }
+                            } else {
+                                updates.push({ item, remaining, requiredStock: 0, productType: 'other' });
                             }
                         }
                     }
@@ -1492,9 +1496,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    // Deduct stock
+                    // Apply Updates
                     updates.forEach(upd => {
-                        window.ForjaDB.registerSale(upd.item.productId, upd.requiredStock);
+                        if (upd.productType === 'tools') {
+                            window.ForjaDB.registerSale(upd.item.productId, upd.requiredStock);
+                        }
                         upd.item.faturadoQty = (upd.item.faturadoQty || 0) + upd.remaining;
                     });
 
@@ -1515,13 +1521,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Revert stock (returning products back to inventory)
                     const inventory = window.ForjaDB.getInventory();
                     for (const item of budget.itens) {
-                        if (item.type === 'tools' && item.productId) {
-                            const product = inventory.find(p => p.id === item.productId);
-                            if (product) {
-                                // If faturadoQty exists, use it. Otherwise assume all were billed.
-                                let billedUnits = item.faturadoQty !== undefined ? item.faturadoQty : item.qty;
-                                
-                                if (billedUnits > 0) {
+                        let billedUnits = item.faturadoQty !== undefined ? item.faturadoQty : item.qty;
+                        
+                        if (billedUnits > 0) {
+                            if (item.type === 'tools' && item.productId) {
+                                const product = inventory.find(p => p.id === item.productId);
+                                if (product) {
                                     let revertStock = billedUnits;
                                     if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
                                         revertStock = billedUnits / 10;
@@ -1529,10 +1534,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     product.stock = (product.stock || 0) + revertStock;
                                     product.soldCount = Math.max(0, (product.soldCount || 0) - revertStock);
                                 }
-                                // Reset faturadoQty
-                                item.faturadoQty = 0;
                             }
                         }
+                        // Reset faturadoQty
+                        item.faturadoQty = 0;
                     }
                     window.ForjaDB.saveInventory(inventory);
                     budget.stockDeducted = false;
