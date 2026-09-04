@@ -382,29 +382,41 @@ function getDashboardStats() {
         const stock = parseInt(p.stock) || 0;
         const sold = parseInt(p.soldCount) || 0;
         
+        // Gasto em compras is the total value of all stock purchased (sold + in stock)
         totalSpent += (stock + sold) * buy;
-        totalRevenue += sold * sell;
-        totalProfit += sold * (sell - buy);
     });
     
-    // Add revenue from non-stock items (services, 3D prints, projects)
+    // Revenue and Profit are calculated purely from actual billed budgets
     const budgets = getBudgets();
-    let serviceRevenue = 0;
     budgets.forEach(b => {
         if (b.status === 'PRODUTO FATURADO' || b.status === 'FATURAMENTO PARCIAL') {
             (b.itens || []).forEach(item => {
-                if (item.type !== 'tools') {
-                    let billed = item.faturadoQty !== undefined ? item.faturadoQty : (b.status === 'PRODUTO FATURADO' ? item.qty : 0);
-                    if (billed > 0) {
-                        serviceRevenue += billed * (item.value || 0);
+                let billed = item.faturadoQty !== undefined ? item.faturadoQty : (b.status === 'PRODUTO FATURADO' ? item.qty : 0);
+                
+                if (billed > 0) {
+                    const itemRevenue = billed * (parseFloat(item.value) || 0);
+                    totalRevenue += itemRevenue;
+                    
+                    if (item.type === 'tools' && item.productId) {
+                        const product = inventory.find(p => p.id === item.productId);
+                        let cost = 0;
+                        if (product) {
+                            const buyPrice = parseFloat(product.buyPrice) || 0;
+                            let requiredStock = billed;
+                            if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
+                                requiredStock = billed / 10;
+                            }
+                            cost = requiredStock * buyPrice;
+                        }
+                        totalProfit += (itemRevenue - cost);
+                    } else {
+                        // Services and 3D Prints have no inventory cost basis
+                        totalProfit += itemRevenue;
                     }
                 }
             });
         }
     });
-    
-    totalRevenue += serviceRevenue;
-    totalProfit += serviceRevenue;
     
     const topSold = [...inventory]
         .filter(p => p.soldCount > 0)
