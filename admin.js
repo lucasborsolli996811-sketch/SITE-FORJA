@@ -211,9 +211,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 topSoldContainer.innerHTML = stats.topSold.map(p => `
                     <tr>
                         <td><strong>${p.name}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(${p.brand})</span></td>
-                        <td style="text-align:right; font-weight:bold; color:var(--accent-light);">${p.soldCount} un.</td>
+                        <td style="text-align:right; font-weight:bold; color:var(--accent-light);">
+                            <span id="sold-count-span-${p.id}">${p.soldCount} un.</span>
+                            <button type="button" class="edit-sold-btn" data-id="${p.id}" data-sold="${p.soldCount}" title="Corrigir quantidade vendida" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem; margin-left:0.5rem;">
+                                <i class="fa-solid fa-pencil"></i>
+                            </button>
+                        </td>
                     </tr>
                 `).join('');
+
+                // Attach events to edit sold count
+                setTimeout(() => {
+                    document.querySelectorAll('.edit-sold-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-id');
+                            const currentSold = parseInt(btn.getAttribute('data-sold')) || 0;
+                            const newVal = prompt("Corrigir quantidade vendida:", currentSold);
+                            if (newVal !== null && !isNaN(parseInt(newVal))) {
+                                const newSold = parseInt(newVal);
+                                if (newSold >= 0) {
+                                    const inventory = window.ForjaDB.getInventory();
+                                    const prod = inventory.find(p => p.id === id);
+                                    if (prod) {
+                                        prod.soldCount = newSold;
+                                        window.ForjaDB.saveInventory(inventory);
+                                        renderTopLists();
+                                        alert("Quantidade vendida corrigida com sucesso!");
+                                    }
+                                }
+                            }
+                        });
+                    });
+                }, 0);
             }
         }
 
@@ -1135,6 +1164,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const budgets = window.ForjaDB.getBudgets();
                 const idx = budgets.findIndex(b => b.number === activeBudgetId);
                 if (idx !== -1) {
+                    const originalBudget = budgets[idx];
+                    
+                    // Preserve status and stock info
+                    budgetData.status = originalBudget.status;
+                    budgetData.stockDeducted = originalBudget.stockDeducted;
+                    budgetData.statusDate = originalBudget.statusDate;
+
+                    // Preserve faturadoQty for matching items
+                    budgetData.itens.forEach(newItem => {
+                        const oldItem = originalBudget.itens.find(oi => 
+                            oi.service === newItem.service && oi.value === newItem.value
+                        );
+                        if (oldItem && oldItem.faturadoQty !== undefined) {
+                            newItem.faturadoQty = oldItem.faturadoQty;
+                        }
+                    });
+
                     budgets[idx] = budgetData;
                     window.ForjaDB.saveBudgets(budgets);
                     alert("Orçamento atualizado no histórico!");
