@@ -233,8 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     const inventory = window.ForjaDB.getInventory();
                                     const prod = inventory.find(p => p.id === id);
                                     if (prod) {
-                                        prod.soldCount = newSold;
-                                        window.ForjaDB.saveInventory(inventory);
+                                        window.ForjaDB.updateProduct(id, { soldCount: newSold });
                                         renderTopLists();
                                         alert("Quantidade vendida corrigida com sucesso!");
                                     }
@@ -1181,8 +1180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
 
-                    budgets[idx] = budgetData;
-                    window.ForjaDB.saveBudgets(budgets);
+                    window.ForjaDB.updateBudgetFull(activeBudgetId, budgetData);
                     alert("Orçamento atualizado no histórico!");
                 }
             } else {
@@ -1577,15 +1575,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                     if (!item.isBox && product.isBox && item.qty >= 10 && item.qty % 10 === 0) {
                                         revertStock = billedUnits / 10;
                                     }
-                                    product.stock = (product.stock || 0) + revertStock;
-                                    product.soldCount = Math.max(0, (product.soldCount || 0) - revertStock);
+                                    const newStock = (product.stock || 0) + revertStock;
+                                    const newSoldCount = Math.max(0, (product.soldCount || 0) - revertStock);
+                                    window.ForjaDB.updateProduct(product.id, { stock: newStock, soldCount: newSoldCount });
                                 }
                             }
                         }
                         // Reset faturadoQty
                         item.faturadoQty = 0;
                     }
-                    window.ForjaDB.saveInventory(inventory);
                     budget.stockDeducted = false;
                     budget.status = newStatus;
                     budget.statusDate = newStatus === 'ORÇAMENTO PERDIDO' ? new Date().toISOString() : null;
@@ -1657,12 +1655,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (item.type === 'tools' && item.productId) {
                                 const product = inventory.find(p => p.id === item.productId);
                                 if (product) {
-                                    product.stock = (product.stock || 0) + item.qty;
-                                    product.soldCount = Math.max(0, (product.soldCount || 0) - item.qty);
+                                    const newStock = (product.stock || 0) + item.qty;
+                                    const newSoldCount = Math.max(0, (product.soldCount || 0) - item.qty);
+                                    window.ForjaDB.updateProduct(product.id, { stock: newStock, soldCount: newSoldCount });
                                 }
                             }
                         }
-                        window.ForjaDB.saveInventory(inventory);
                     }
                     window.ForjaDB.deleteBudget(num);
                     renderBudgetsHistory();
@@ -1693,12 +1691,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (item.type === 'tools' && item.productId) {
                             const product = inventory.find(p => p.id === item.productId);
                             if (product) {
-                                product.stock = (product.stock || 0) + item.qty;
-                                product.soldCount = Math.max(0, (product.soldCount || 0) - item.qty);
+                                const newStock = (product.stock || 0) + item.qty;
+                                const newSoldCount = Math.max(0, (product.soldCount || 0) - item.qty);
+                                window.ForjaDB.updateProduct(product.id, { stock: newStock, soldCount: newSoldCount });
                             }
                         }
                     }
-                    window.ForjaDB.saveInventory(inventory);
                 }
                 
                 budget.stockDeducted = false;
