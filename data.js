@@ -270,27 +270,7 @@ async function syncLoadAdmin() {
             cachedData.lastBudgetNum = confSnap.data().lastBudgetNum || 12005;
         }
 
-        // Garantir que todos os orçamentos já realizados estejam presentes e salvos
-        let budgetsUpdated = false;
-        defaultBudgets.forEach(dbud => {
-            if (!cachedData.budgets.some(b => b.number === dbud.number)) {
-                cachedData.budgets.push(JSON.parse(JSON.stringify(dbud)));
-                budgetsUpdated = true;
-                if (db && getCurrentUser()) {
-                    db.collection('budgets').doc(dbud.number.toString()).set(dbud).catch(console.error);
-                }
-            }
-        });
-
-        // Garantir clientes vinculados aos orçamentos
-        defaultClients.forEach(dc => {
-            if (!cachedData.clients.some(c => c.id === dc.id || (c.name && c.name.toUpperCase() === dc.name.toUpperCase()))) {
-                cachedData.clients.push(JSON.parse(JSON.stringify(dc)));
-                if (db && getCurrentUser()) {
-                    db.collection('clients').doc(dc.id).set(dc).catch(console.error);
-                }
-            }
-        });
+        let budgetsUpdated = false; // Kept to avoid syntax errors below if it's referenced
 
         if (budgetsUpdated) {
             cachedData.lastBudgetNum = Math.max(cachedData.lastBudgetNum || 12001, 12005);
@@ -885,6 +865,7 @@ window.ForjaDB = {
 
 // Carregar cache local inicialmente para nÃ£o dar erro no boot
 loadFromLocalStorage();
+
 
 
 
