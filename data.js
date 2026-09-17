@@ -429,7 +429,7 @@ function deleteProduct(id) {
     let inventory = getInventory();
     inventory = inventory.filter(p => p.id !== id);
     saveInventory(inventory);
-    if (db && getCurrentUser()) db.collection('inventory').doc(id).delete();
+    if (db && getCurrentUser()) db.collection('inventory').doc(id).delete().catch(e => alert('Erro Firebase: ' + e.message));
 }
 
 function getAvailableCatalog() {
@@ -507,7 +507,7 @@ function deleteClient(id) {
     let clients = getClients();
     clients = clients.filter(c => c.id !== id);
     saveClients(clients);
-    if (db && getCurrentUser()) db.collection('clients').doc(id).delete();
+    if (db && getCurrentUser()) db.collection('clients').doc(id).delete().catch(e => alert('Erro Firebase: ' + e.message));
 }
 
 function updateClient(id, updatedFields) {
@@ -578,7 +578,7 @@ function deleteBudget(number) {
     let budgets = getBudgets();
     budgets = budgets.filter(b => b.number !== parseInt(number));
     saveBudgets(budgets);
-    if (db && getCurrentUser()) db.collection('budgets').doc(number.toString()).delete();
+    if (db && getCurrentUser()) db.collection('budgets').doc(number.toString()).delete().catch(e => alert('Erro Firebase: ' + e.message));
 }
 
 // === POSTS (CMS) OPERATIONS ===
@@ -617,7 +617,7 @@ function deletePost(id) {
     let posts = getPosts();
     posts = posts.filter(p => p.id !== id);
     savePosts(posts);
-    if (db && getCurrentUser()) db.collection('posts').doc(id).delete();
+    if (db && getCurrentUser()) db.collection('posts').doc(id).delete().catch(e => alert('Erro Firebase: ' + e.message));
 }
 
 // === RAW MATERIALS 3D (MP IMPRESSÃO 3D) OPERATIONS ===
@@ -885,6 +885,7 @@ window.ForjaDB = {
 
 // Carregar cache local inicialmente para nÃ£o dar erro no boot
 loadFromLocalStorage();
+
 
 
 
