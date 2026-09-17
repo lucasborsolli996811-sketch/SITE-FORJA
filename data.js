@@ -1,4 +1,4 @@
-/* ==========================================
+﻿/* ==========================================
    FORJA — Firebase Cloud Database (Secure Mode)
    ========================================== */
 
@@ -11,26 +11,116 @@ const firebaseConfig = {
     appId: "1:895147560900:web:13c347dc25eef98ed31e91"
 };
 
-// Initialize Firebase (Compat SDK must be loaded in HTML before data.js)
-if (typeof firebase !== 'undefined') {
+// Detectar se está rodando em ambiente local (localhost / arquivo local)
+const isLocalEnv = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.protocol === 'file:'
+);
+
+// Initialize Firebase (apenas se NÃO estiver em ambiente local de testes/desenvolvimento)
+if (!isLocalEnv && typeof firebase !== 'undefined') {
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
 }
-const db = typeof firebase !== 'undefined' ? firebase.firestore() : null;
-const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
+const db = (!isLocalEnv && typeof firebase !== 'undefined') ? firebase.firestore() : null;
+const auth = (!isLocalEnv && typeof firebase !== 'undefined') ? firebase.auth() : null;
+
+if (isLocalEnv) {
+    console.info("🛡️ FORJA DEV: Modo Localhost / Offline ativado. As alterações NÃO afetam o site ou o banco de dados online.");
+}
 
 const STORAGE_KEY = 'forja_inventory';
 const CLIENTS_KEY = 'forja_clients';
 const BUDGETS_KEY = 'forja_budgets';
 const LAST_NUM_KEY = 'forja_last_budget_num';
+const POSTS_KEY = 'forja_posts';
+const RAW_MATERIALS_KEY = 'forja_raw_materials_3d';
+const CONSUMABLES_KEY = 'forja_consumables_3d';
+
+// Dados Padrão de Orçamentos e Clientes Realizados
+const defaultClients = [
+    {
+        id: 'client-1',
+        name: 'STEMA USINAGEM E SOLDA',
+        address: 'Rua das Indústrias, 450 - Bauru/SP',
+        email: 'contato@stema.com.br',
+        phone: '(14) 99777-8888'
+    },
+    {
+        id: 'client-1784044878255',
+        name: 'Stema Usinagem e Solda',
+        address: 'Av. Joaquim Ferraz de Almeida Prado, 1585',
+        email: 'stema@stemausinagem.com.br',
+        phone: '( 14 ) 99145-4938'
+    }
+];
+
+const defaultBudgets = [
+    {
+        number: 12001,
+        clientId: 'client-1',
+        clientName: 'STEMA USINAGEM E SOLDA',
+        date: '2026-07-01',
+        deliveryDate: 'Entre 10/07 a 20/07',
+        itens: [
+            {
+                service: 'SPMX07T308 YG02',
+                type: 'tools',
+                value: 45.20,
+                qty: 10,
+                total: 452.00,
+                faturadoQty: 10
+            }
+        ],
+        observations: '',
+        status: 'PRODUTO FATURADO',
+        totalValue: 452.00,
+        stockDeducted: true,
+        vendedor: 'Lucas',
+        validadeDate: '7 dias',
+        paymentCond: 'A combinar',
+        frete: 0
+    },
+    {
+        number: 12005,
+        clientId: 'client-1784044878255',
+        clientName: 'Stema Usinagem e Solda',
+        date: '2026-06-29',
+        deliveryDate: 'Entre 10/07 a 20/07',
+        itens: [
+            {
+                service: 'Bedame 3mm (Deskar)',
+                details: 'TDC300',
+                type: 'tools',
+                value: 580.00,
+                qty: 1,
+                total: 580.00,
+                productId: 'deskar-1784044750684',
+                faturadoQty: 0
+            }
+        ],
+        observations: 'Pedido entregue.',
+        status: 'EM ABERTO',
+        totalValue: 580.00,
+        stockDeducted: false,
+        vendedor: 'Lucas',
+        validadeDate: '7 dias',
+        paymentCond: 'A combinar',
+        frete: 0
+    }
+];
 
 // Cache em Memória
 let cachedData = {
     inventory: [],
     clients: [],
     budgets: [],
-    lastBudgetNum: 12001
+    posts: [],
+    rawMaterials: [],
+    consumables3d: [],
+    lastBudgetNum: 12005
 };
 
 // Auth listener callback
@@ -42,25 +132,62 @@ if (auth) {
             onAuthStateChangeCallback(user);
         }
     });
+} else if (isLocalEnv) {
+    // Em localhost / desenvolvimento offline, inicializar sessão local imediata
+    setTimeout(() => {
+        const localSession = localStorage.getItem('forja_local_admin_session') === 'true';
+        if (onAuthStateChangeCallback && localSession) {
+            onAuthStateChangeCallback({ email: 'admin@forja.local', uid: 'local-admin' });
+        }
+    }, 10);
 }
 
 // --- Authentication Operations ---
 function loginAdmin(email, password) {
+    if (isLocalEnv) {
+        // Autenticação local offline
+        localStorage.setItem('forja_local_admin_session', 'true');
+        const mockUser = { email: email || 'admin@forja.local', uid: 'local-admin' };
+        if (onAuthStateChangeCallback) {
+            onAuthStateChangeCallback(mockUser);
+        }
+        return Promise.resolve(mockUser);
+    }
     if (!auth) return Promise.reject("Firebase Auth não carregado.");
     return auth.signInWithEmailAndPassword(email, password);
 }
 
 function logoutAdmin() {
+    if (isLocalEnv) {
+        localStorage.removeItem('forja_local_admin_session');
+        if (onAuthStateChangeCallback) {
+            onAuthStateChangeCallback(null);
+        }
+        return Promise.resolve();
+    }
     if (!auth) return Promise.resolve();
     return auth.signOut();
 }
 
 function getCurrentUser() {
+    if (isLocalEnv) {
+        return localStorage.getItem('forja_local_admin_session') === 'true'
+            ? { email: 'admin@forja.local', uid: 'local-admin' }
+            : null;
+    }
     return auth ? auth.currentUser : null;
 }
 
 function setAuthStateListener(cb) {
     onAuthStateChangeCallback = cb;
+    if (isLocalEnv) {
+        const localSession = localStorage.getItem('forja_local_admin_session') === 'true';
+        if (localSession) {
+            setTimeout(() => {
+                cb({ email: 'admin@forja.local', uid: 'local-admin' });
+            }, 0);
+        }
+    }
 }
 
 // --- Sincronização Pública (Apenas Estoque) ---
@@ -85,10 +212,14 @@ async function syncLoadPublic() {
 // --- Sincronização Privada (Estoque, Clientes, Orçamentos) ---
 async function syncLoadAdmin() {
     if (!db) {
-        console.warn("Firebase não inicializado. Usando banco local (localStorage).");
-        alert("Erro Crítico: Os scripts do Firebase não carregaram. Verifique a internet ou bloqueadores de anúncios.");
+        if (!isLocalEnv) {
+            console.warn("Firebase não inicializado. Usando banco local (localStorage).");
+            alert("Erro Crítico: Os scripts do Firebase não carregaram. Verifique a internet ou bloqueadores de anúncios.");
+        } else {
+            console.log("Modo Offline Localhost ativo: carregando dados locais do localStorage instantaneamente.");
+        }
         loadFromLocalStorage();
-        return;
+        return Promise.resolve();
     }
     
     // Check if logged in first to avoid permission denied
@@ -98,36 +229,80 @@ async function syncLoadAdmin() {
     }
 
     try {
+        // Carregamento paralelo simultâneo ultra-rápido de todas as coleções
+        const [invSnap, cliSnap, budSnap, postsSnap, rawSnap, confSnap] = await Promise.all([
+            db.collection('inventory').get(),
+            db.collection('clients').get(),
+            db.collection('budgets').get(),
+            db.collection('posts').get(),
+            db.collection('raw_materials_3d').get(),
+            db.collection('config').doc('main').get()
+        ]);
+
         let isEmpty = true;
 
-        const invSnap = await db.collection('inventory').get();
         if (!invSnap.empty) {
             cachedData.inventory = invSnap.docs.map(d => d.data());
             isEmpty = false;
         }
 
-        const cliSnap = await db.collection('clients').get();
         if (!cliSnap.empty) {
             cachedData.clients = cliSnap.docs.map(d => d.data());
             isEmpty = false;
         }
 
-        const budSnap = await db.collection('budgets').get();
         if (!budSnap.empty) {
             cachedData.budgets = budSnap.docs.map(d => d.data());
             isEmpty = false;
         }
 
-        const confSnap = await db.collection('config').doc('main').get();
+        if (!postsSnap.empty) {
+            cachedData.posts = postsSnap.docs.map(d => d.data());
+            isEmpty = false;
+        }
+
+        if (!rawSnap.empty) {
+            cachedData.rawMaterials = rawSnap.docs.map(d => d.data());
+            isEmpty = false;
+        }
+
         if (confSnap.exists) {
-            cachedData.lastBudgetNum = confSnap.data().lastBudgetNum || 12001;
+            cachedData.lastBudgetNum = confSnap.data().lastBudgetNum || 12005;
+        }
+
+        // Garantir que todos os orçamentos já realizados estejam presentes e salvos
+        let budgetsUpdated = false;
+        defaultBudgets.forEach(dbud => {
+            if (!cachedData.budgets.some(b => b.number === dbud.number)) {
+                cachedData.budgets.push(JSON.parse(JSON.stringify(dbud)));
+                budgetsUpdated = true;
+                if (db && getCurrentUser()) {
+                    db.collection('budgets').doc(dbud.number.toString()).set(dbud).catch(console.error);
+                }
+            }
+        });
+
+        // Garantir clientes vinculados aos orçamentos
+        defaultClients.forEach(dc => {
+            if (!cachedData.clients.some(c => c.id === dc.id || (c.name && c.name.toUpperCase() === dc.name.toUpperCase()))) {
+                cachedData.clients.push(JSON.parse(JSON.stringify(dc)));
+                if (db && getCurrentUser()) {
+                    db.collection('clients').doc(dc.id).set(dc).catch(console.error);
+                }
+            }
+        });
+
+        if (budgetsUpdated) {
+            cachedData.lastBudgetNum = Math.max(cachedData.lastBudgetNum || 12001, 12005);
+            if (db && getCurrentUser()) {
+                db.collection('config').doc('main').set({ lastBudgetNum: cachedData.lastBudgetNum }).catch(console.error);
+            }
         }
 
         if (isEmpty) {
             console.log("Firebase está vazio. Migrando dados do LocalStorage para a nuvem...");
             loadFromLocalStorage(); // Carrega o que já existia no PC dele
             syncSave(); // Força o envio (upload) de tudo pro Firebase
-            alert("Dados sincronizados com o Firebase pela primeira vez!");
         } else {
             console.log("Banco de dados sincronizado com Firebase com sucesso (Admin).");
             saveToLocalStorage(); // Mantém cópia local para rapidez
@@ -153,20 +328,58 @@ function syncSave() {
     cachedData.budgets.forEach(b => {
         db.collection('budgets').doc(b.number.toString()).set(b);
     });
+    cachedData.posts.forEach(p => {
+        db.collection('posts').doc(p.id).set(p);
+    });
+    cachedData.rawMaterials.forEach(rm => {
+        db.collection('raw_materials_3d').doc(rm.id).set(rm);
+    });
     db.collection('config').doc('main').set({ lastBudgetNum: cachedData.lastBudgetNum });
 }
 
 function loadFromLocalStorage() {
+    const rawBudgets = localStorage.getItem(BUDGETS_KEY);
+    const rawClients = localStorage.getItem(CLIENTS_KEY);
+
     cachedData.inventory = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    cachedData.clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || '[]');
-    cachedData.budgets = JSON.parse(localStorage.getItem(BUDGETS_KEY) || '[]');
-    cachedData.lastBudgetNum = parseInt(localStorage.getItem(LAST_NUM_KEY) || '12001');
+    cachedData.clients = JSON.parse(rawClients || '[]');
+    cachedData.budgets = JSON.parse(rawBudgets || '[]');
+    cachedData.posts = JSON.parse(localStorage.getItem(POSTS_KEY) || '[]');
+    cachedData.rawMaterials = JSON.parse(localStorage.getItem(RAW_MATERIALS_KEY) || '[]');
+    cachedData.consumables3d = JSON.parse(localStorage.getItem(CONSUMABLES_KEY) || '[]');
+    cachedData.lastBudgetNum = parseInt(localStorage.getItem(LAST_NUM_KEY) || '12005');
+
+    let hasNew = false;
+    if (!rawBudgets) {
+        defaultBudgets.forEach(dbud => {
+            if (!cachedData.budgets.some(b => b.number === dbud.number)) {
+                cachedData.budgets.push(JSON.parse(JSON.stringify(dbud)));
+                hasNew = true;
+            }
+        });
+    }
+    if (!rawClients) {
+        defaultClients.forEach(dc => {
+            if (!cachedData.clients.some(c => c.id === dc.id || (c.name && c.name.toUpperCase() === dc.name.toUpperCase()))) {
+                cachedData.clients.push(JSON.parse(JSON.stringify(dc)));
+                hasNew = true;
+            }
+        });
+    }
+
+    cachedData.lastBudgetNum = Math.max(cachedData.lastBudgetNum || 12001, 12005);
+    if (hasNew) {
+        saveToLocalStorage();
+    }
 }
 
 function saveToLocalStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cachedData.inventory));
     localStorage.setItem(CLIENTS_KEY, JSON.stringify(cachedData.clients));
     localStorage.setItem(BUDGETS_KEY, JSON.stringify(cachedData.budgets));
+    localStorage.setItem(POSTS_KEY, JSON.stringify(cachedData.posts));
+    localStorage.setItem(RAW_MATERIALS_KEY, JSON.stringify(cachedData.rawMaterials));
+    localStorage.setItem(CONSUMABLES_KEY, JSON.stringify(cachedData.consumables3d));
     localStorage.setItem(LAST_NUM_KEY, cachedData.lastBudgetNum.toString());
 }
 
@@ -368,7 +581,171 @@ function deleteBudget(number) {
     if (db && getCurrentUser()) db.collection('budgets').doc(number.toString()).delete();
 }
 
+// === POSTS (CMS) OPERATIONS ===
+function getPosts() {
+    return cachedData.posts || [];
+}
+
+function savePosts(posts) {
+    cachedData.posts = posts;
+    saveToLocalStorage();
+}
+
+function addPost(post) {
+    const posts = getPosts();
+    post.id = `post-${Date.now()}`;
+    post.createdAt = new Date().toISOString();
+    posts.push(post);
+    savePosts(posts);
+    if (db && getCurrentUser()) db.collection('posts').doc(post.id).set(post);
+    return post;
+}
+
+function updatePost(id, updatedFields) {
+    const posts = getPosts();
+    const index = posts.findIndex(p => p.id === id);
+    if (index !== -1) {
+        posts[index] = { ...posts[index], ...updatedFields };
+        savePosts(posts);
+        if (db && getCurrentUser()) db.collection('posts').doc(id).update(updatedFields);
+        return true;
+    }
+    return false;
+}
+
+function deletePost(id) {
+    let posts = getPosts();
+    posts = posts.filter(p => p.id !== id);
+    savePosts(posts);
+    if (db && getCurrentUser()) db.collection('posts').doc(id).delete();
+}
+
+// === RAW MATERIALS 3D (MP IMPRESSÃO 3D) OPERATIONS ===
+function getRawMaterials3D() {
+    const list = cachedData.rawMaterials || [];
+    // Auto-migração para gramas (se o usuário informou 1kg vira 1000g)
+    list.forEach(m => {
+        if (m.stockGrams === undefined) {
+            const kg = parseFloat(m.stockKg) || 0;
+            m.stockGrams = kg >= 50 ? kg : Math.round(kg * 1000);
+            m.stockKg = m.stockGrams / 1000;
+        }
+    });
+    return list;
+}
+
+function saveRawMaterials3D(materials) {
+    cachedData.rawMaterials = materials;
+    saveToLocalStorage();
+}
+
+function addRawMaterial3D(material) {
+    const materials = getRawMaterials3D();
+    material.id = `mp3d-${Date.now()}`;
+    material.createdAt = new Date().toISOString();
+    material.pricePerKg = parseFloat(material.pricePerKg) || 0;
+    
+    // Converte para gramas: 1kg = 1000g
+    let grams = 0;
+    if (material.stockGrams !== undefined) {
+        grams = parseFloat(material.stockGrams) || 0;
+    } else if (material.stockKg !== undefined) {
+        const val = parseFloat(material.stockKg) || 0;
+        grams = val >= 50 ? val : Math.round(val * 1000);
+    }
+    material.stockGrams = grams;
+    material.stockKg = grams / 1000;
+
+    material.color = (material.color || '').trim();
+    material.buyLink = (material.buyLink || '').trim();
+    materials.push(material);
+    saveRawMaterials3D(materials);
+    if (db && getCurrentUser()) {
+        db.collection('raw_materials_3d').doc(material.id).set(material).catch(console.error);
+    }
+    return material;
+}
+
+function updateRawMaterial3D(id, updatedFields) {
+    const materials = getRawMaterials3D();
+    const index = materials.findIndex(m => m.id === id);
+    if (index !== -1) {
+        if (updatedFields.pricePerKg !== undefined) {
+            updatedFields.pricePerKg = parseFloat(updatedFields.pricePerKg) || 0;
+        }
+        if (updatedFields.stockGrams !== undefined) {
+            const grams = parseFloat(updatedFields.stockGrams) || 0;
+            updatedFields.stockGrams = grams;
+            updatedFields.stockKg = grams / 1000;
+        } else if (updatedFields.stockKg !== undefined) {
+            const val = parseFloat(updatedFields.stockKg) || 0;
+            const grams = val >= 50 ? val : Math.round(val * 1000);
+            updatedFields.stockGrams = grams;
+            updatedFields.stockKg = grams / 1000;
+        }
+        materials[index] = { ...materials[index], ...updatedFields };
+        saveRawMaterials3D(materials);
+        if (db && getCurrentUser()) {
+            db.collection('raw_materials_3d').doc(id).update(updatedFields).catch(console.error);
+        }
+        return true;
+    }
+    return false;
+}
+
+function deleteRawMaterial3D(id) {
+    let materials = getRawMaterials3D();
+    materials = materials.filter(m => m.id !== id);
+    saveRawMaterials3D(materials);
+    if (db && getCurrentUser()) {
+        db.collection('raw_materials_3d').doc(id).delete().catch(console.error);
+    }
+}
+
 // === DASHBOARD STATISTICS ===
+
+// === CONSUMABLES 3D OPERATIONS ===
+function getConsumables3d() {
+    return cachedData.consumables3d || [];
+}
+
+function saveConsumables3d(consumables) {
+    cachedData.consumables3d = consumables;
+    saveToLocalStorage();
+}
+
+function addConsumable3d(c) {
+    const list = getConsumables3d();
+    c.id = 'cons3d-' + Date.now();
+    c.createdAt = new Date().toISOString();
+    list.push(c);
+    saveConsumables3d(list);
+    if (db && getCurrentUser()) {
+        db.collection('consumables_3d').doc(c.id).set(c).catch(console.error);
+    }
+    return c;
+}
+
+function deleteConsumable3d(id) {
+    let list = getConsumables3d();
+    list = list.filter(c => c.id !== id);
+    saveConsumables3d(list);
+    if (db && getCurrentUser()) {
+        db.collection('consumables_3d').doc(id).delete().catch(console.error);
+    }
+}
+
+function updateConsumable3d(id, newData) {
+    let list = getConsumables3d();
+    const idx = list.findIndex(c => c.id === id);
+    if (idx !== -1) {
+        list[idx] = { ...list[idx], ...newData };
+        saveConsumables3d(list);
+        if (db && getCurrentUser()) {
+            db.collection('consumables_3d').doc(id).update(newData).catch(console.error);
+        }
+    }
+}
 function getDashboardStats() {
     const inventory = getInventory();
     
@@ -384,6 +761,22 @@ function getDashboardStats() {
         
         // Gasto em compras is the total value of all stock purchased (sold + in stock)
         totalSpent += (stock + sold) * buy;
+    });
+
+    // Somar valor da matéria-prima de impressão 3D (filamento/resina) em gramas ao gasto de estoque
+    const rawMaterials = getRawMaterials3D();
+    rawMaterials.forEach(rm => {
+        const price = parseFloat(rm.pricePerKg) || 0;
+        const grams = parseFloat(rm.stockGrams) || 0;
+        totalSpent += (grams / 1000) * price;
+    });
+    
+        // Somar consumos (impressão 3D e outros gastos avulsos)
+    const consumables = getConsumables3d();
+    consumables.forEach(c => {
+        const qty = parseFloat(c.qty) || 0;
+        const price = parseFloat(c.price) || 0;
+        totalSpent += qty * price;
     });
     
     // Revenue and Profit are calculated purely from actual billed budgets
@@ -473,8 +866,35 @@ window.ForjaDB = {
     deleteBudget,
     getNextBudgetNumber,
     
+    getPosts,
+    addPost,
+    updatePost,
+    deletePost,
+    
+    getRawMaterials3D,
+    addRawMaterial3D,
+    updateRawMaterial3D,
+    deleteRawMaterial3D,
+    getConsumables3d,
+    addConsumable3d,
+    updateConsumable3d,
+    deleteConsumable3d,
+    
     getDashboardStats
 };
 
 // Carregar cache local inicialmente para nÃ£o dar erro no boot
 loadFromLocalStorage();
+
+
+
+
+
+
+
+
+
+
+
+
+

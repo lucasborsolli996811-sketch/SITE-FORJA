@@ -273,11 +273,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // Run dynamic catalog render
-    // Initialize Catalog from DB after sync (Public mode)
+    // Run dynamic catalog render imediatamente a partir do cache local (Instantâneo)
+    renderDynamicCatalog();
+
+    // Sincroniza catálogo com o Firebase em background para atualizar novidades sem travar
     window.ForjaDB.syncLoadPublic().then(() => {
         renderDynamicCatalog();
-    });
+    }).catch(e => console.log("Catálogo mantido do cache local"));
 
     // --- Request Quote (WhatsApp) ---
     if (btnRequestQuoteWhatsapp) {

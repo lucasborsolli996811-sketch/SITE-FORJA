@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head><link rel="icon" type="image/png" href="Imagem/favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso Restrito - Estoque & Orçamentos | Forja</title>
-    <link rel="stylesheet" href="style.css?v=35">
+    <link rel="stylesheet" href="style.css?v=56">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,10 +12,10 @@
 </head>
 <body>
 
-    <!-- ===== SYNC LOADING SPINNER ===== -->
-    <div id="sync-loader-overlay" style="position: fixed; inset: 0; background: rgba(10, 10, 15, 0.95); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; color: var(--text-primary); transition: opacity 0.4s ease, visibility 0.4s;">
-        <div class="spinner" style="width: 50px; height: 50px; border: 4px solid rgba(249, 115, 22, 0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-        <div style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; text-align: center; padding: 0 1rem;">Sincronizando banco de dados...</div>
+    <!-- ===== SYNC LOADING SPINNER (Apenas quando sincronizando na nuvem) ===== -->
+    <div id="sync-loader-overlay" style="display: none; position: fixed; inset: 0; background: rgba(10, 10, 15, 0.85); backdrop-filter: blur(4px); z-index: 999999; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; color: var(--text-primary); transition: opacity 0.3s ease;">
+        <div class="spinner" style="width: 42px; height: 42px; border: 3px solid rgba(249, 115, 22, 0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <div style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; text-align: center; padding: 0 1rem; color: var(--text-secondary);">Sincronizando com a nuvem...</div>
     </div>
 
     <!-- ===== LOGO GIGANTE / PDF PREVIEW FIXA NA ESQUERDA ===== -->
@@ -207,25 +207,34 @@
                 <!-- TABS NAVIGATION -->
                 <div class="admin-tabs">
                     <button class="tab-btn active" data-tab="tab-estoque">
-                        <i class="fa-solid fa-boxes-stacked"></i> Estoque & Dashboard
+                        <i class="fa-solid fa-boxes-stacked"></i> Estoque
+                    </button>
+                    <button class="tab-btn" data-tab="tab-site">
+                        <i class="fa-solid fa-earth-americas"></i> Site (CMS)
+                    </button>
+                    <button class="tab-btn" data-tab="tab-faturamento">
+                        <i class="fa-solid fa-file-invoice"></i> Faturamento
+                    </button>
+                    <button class="tab-btn" data-tab="tab-orcamento">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Orçamento
                     </button>
                     <button class="tab-btn" data-tab="tab-clientes">
                         <i class="fa-solid fa-users"></i> Clientes
                     </button>
-                    <button class="tab-btn" data-tab="tab-gerador">
-                        <i class="fa-solid fa-file-invoice-dollar"></i> Gerador de Orçamento
+                    <button class="tab-btn" data-tab="tab-dashboard">
+                        <i class="fa-solid fa-chart-line"></i> Dashboard
                     </button>
-                    <button class="tab-btn" data-tab="tab-historico">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Histórico
+                    <button class="tab-btn" data-tab="tab-impressao3d">
+                        <i class="fa-solid fa-cube"></i> Impressão 3D
                     </button>
                 </div>
 
-                <!-- TAB CONTENT: ESTOQUE & DASHBOARD -->
-                <div class="tab-content active" id="tab-estoque">
+                <!-- TAB CONTENT: DASHBOARD -->
+                <div class="tab-content" id="tab-dashboard">
                     <!-- Metrics Cards -->
                     <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
                         <div class="metric-card" style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md);">
-                            <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Gasto em Compras</span>
+                            <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Gasto Total (Despesas)</span>
                             <h2 id="metric-spent" style="font-size:1.8rem; margin-top:0.5rem; color:var(--text-primary);">R$ 0,00</h2>
                         </div>
                         <div class="metric-card" style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md);">
@@ -273,11 +282,23 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Estoque Grid -->
-                    <div class="dashboard-grid">
-                        <!-- Form Cadastro -->
-                        <div class="dashboard-panel-card">
+                <!-- TAB CONTENT: ESTOQUE -->
+                <div class="tab-content active" id="tab-estoque">
+                    
+                    <div style="display: flex; gap: 0.6rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-ghost estoque-subtab-btn" id="subtab-btn-list" style="border-color: var(--accent); color: var(--accent);">
+                            <i class="fa-solid fa-wrench"></i> Estoque Ferramentas
+                        </button>
+                        <button class="btn btn-ghost estoque-subtab-btn" id="subtab-btn-add">
+                            <i class="fa-solid fa-plus"></i> Cadastrar Ferramenta
+                        </button>
+                    </div>
+
+                    <div style="display: block; width: 100%;">
+                        <!-- Form Cadastro Ferramentas -->
+                        <div class="dashboard-panel-card" id="estoque-panel-add" style="display: none; max-width: 800px; margin: 0 auto;">
                             <h3>Cadastrar Nova Ferramenta</h3>
                             <form id="add-product-form" style="margin-top:1.5rem;">
                                 <input type="hidden" id="prod-id" value="">
@@ -311,12 +332,12 @@
                                 </div>
                                 <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                     <div class="form-group">
-                                        <label for="prod-buy-price">Valor de Compra (R$)</label>
-                                        <input type="number" id="prod-buy-price" min="0" step="0.01" value="0.00" required>
+                                        <label for="prod-buy-price">Valor de Compra / Custo (R$)</label>
+                                        <input type="number" id="prod-buy-price" min="0" step="0.01" placeholder="Ex: 35.00" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="prod-sell-price">Valor de Venda (R$)</label>
-                                        <input type="number" id="prod-sell-price" min="0" step="0.01" value="0.00" required>
+                                        <input type="number" id="prod-sell-price" min="0" step="0.01" placeholder="Ex: 85.00" required>
                                     </div>
                                 </div>
                                 <div class="form-group">
@@ -334,20 +355,233 @@
                             </form>
                         </div>
 
-                        <!-- Lista de Estoque -->
-                        <div class="dashboard-panel-card list-panel">
-                            <h3>Itens Cadastrados no Estoque</h3>
+                        <!-- Lista de Estoque Ferramentas -->
+                        <div class="dashboard-panel-card list-panel" id="estoque-panel-list">
+                            <h3>Itens Cadastrados no Estoque de Ferramentas</h3>
                             <div class="inventory-table-wrap" style="margin-top:1.5rem;">
                                 <table class="inventory-table">
                                     <thead>
                                         <tr>
-                                            <th>Marca</th>
+                                            <th style="width: 60px;">Ref.</th>
                                             <th>Produto</th>
+                                            <th style="text-align:center;">Venda</th>
                                             <th style="text-align:center;">Estoque</th>
                                             <th style="text-align:right;">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody id="inventory-list-tbody">
+                                        <!-- Dynamic rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Form Cadastro MP 3D -->
+
+                    </div>
+                </div>
+
+                                <!-- TAB CONTENT: IMPRESSÃO 3D -->
+                <div class="tab-content" id="tab-impressao3d">
+                    <div style="display: flex; gap: 0.6rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-ghost estoque-subtab-btn" id="subtab-btn-mp-list" style="border-color: var(--accent); color: var(--accent);">
+                            <i class="fa-solid fa-cubes-stacked"></i> Estoque MP 3D (Filamentos)
+                        </button>                        <button class="btn btn-ghost estoque-subtab-btn" id="subtab-btn-mp-add">
+                            <i class="fa-solid fa-plus"></i> Cadastrar MP 3D
+                        </button>
+                        <button class="btn btn-ghost estoque-subtab-btn" id="subtab-btn-cons-list" style="margin-left: 0.4rem;">
+                            <i class="fa-solid fa-list-ul"></i> Consumos (3D)
+                        </button>
+                        <button class="btn btn-ghost estoque-subtab-btn" id="subtab-btn-cons-add">
+                            <i class="fa-solid fa-plus"></i> Add Consumo
+                        </button>
+                    </div>
+                    <div style="display: block; width: 100%;">
+
+                        <div class="dashboard-panel-card" id="estoque-panel-mp-add" style="display: none; max-width: 600px; margin: 0 auto;">
+                            <h3 id="mp-form-title"><i class="fa-solid fa-cube" style="color: var(--accent);"></i> Cadastrar Matéria-Prima (Impressão 3D)</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;">Cadastre novos filamentos e resinas informando a cor, valor por Kg e link de compra.</p>
+                            
+                            <form id="add-raw-material-form" style="margin-top:1.5rem;">
+                                <input type="hidden" id="rm-id" value="">
+                                
+                                <div class="form-group">
+                                    <label for="rm-color"><i class="fa-solid fa-palette" style="color: var(--accent); margin-right: 0.3rem;"></i> Cor da Matéria-Prima</label>
+                                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                        <input type="color" id="rm-color-hex" value="#18181b" title="Cor da bolinha" style="width: 44px; height: 38px; padding: 2px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-primary); cursor: pointer;">
+                                        <input type="text" id="rm-color" placeholder="Ex: Preto, Verde, Amarelo, Branco, Vermelho..." required style="flex: 1;">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="rm-price-kg"><i class="fa-solid fa-tag" style="color: #25d366; margin-right: 0.3rem;"></i> Valor do Kg (R$)</label>
+                                        <input type="number" id="rm-price-kg" min="0" step="0.01" placeholder="Ex: 85.00" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="rm-stock-grams"><i class="fa-solid fa-scale-balanced" style="color: var(--accent-light); margin-right: 0.3rem;"></i> Estoque Inicial (Gramas ou Kg)</label>
+                                        <input type="number" id="rm-stock-grams" min="0" step="1" value="1000" placeholder="Ex: 1000 (1 Kg) ou 500">
+                                        <small style="display:block; color:var(--text-muted); font-size:0.75rem; margin-top:0.25rem;">
+                                            1 Kg = 1000g (se informar 1, convertemos automaticamente para 1000)
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="rm-buy-link"><i class="fa-solid fa-store" style="color: #3b82f6; margin-right: 0.3rem;"></i> Fornecedor / Link de Compra (Opcional)</label>
+                                    <input type="text" id="rm-buy-link" placeholder="Ex: 3D Fila, Mercado Livre ou link https://...">
+                                </div>
+
+                                <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                                    <button type="button" class="btn btn-ghost" id="rm-cancel-btn" style="display: none; flex: 1;">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-primary" id="rm-submit-btn" style="flex: 2;">
+                                        <i class="fa-solid fa-check"></i>
+                                        <span>Salvar Matéria-Prima</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+
+                        <!-- Lista de MP 3D -->
+                        <div class="dashboard-panel-card list-panel" id="estoque-panel-mp-list" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
+                                <h3 style="margin:0;"><i class="fa-solid fa-cubes-stacked" style="color: var(--accent);"></i> Estoque de Matéria-Prima (Impressão 3D)</h3>
+                                <button type="button" class="btn btn-primary" id="btn-quick-add-mp" style="font-size: 0.82rem; padding: 0.4rem 0.9rem;">
+                                    <i class="fa-solid fa-plus"></i> Nova Cor / Material
+                                </button>
+                            </div>
+                            <div class="inventory-table-wrap">
+                                <table class="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Cor / Material</th>
+                                            <th style="text-align:center;">Valor do Kg</th>
+                                            <th style="text-align:center;">Estoque Disponível</th>
+                                            <th style="text-align:center;">Fornecedor / Compra</th>
+                                            <th style="text-align:right;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="raw-materials-tbody">
+                                        <!-- Dynamic raw materials -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>                        <!-- Form Cadastro Consumos 3D -->
+                        <div class="dashboard-panel-card" id="estoque-panel-cons-add" style="display: none; max-width: 600px; margin: 0 auto;">
+                            <h3><i class="fa-solid fa-money-bill-wave" style="color: var(--accent);"></i> Cadastrar Consumo (Impressão 3D)</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.3rem;">Cadastre itens que você precisou comprar para os serviços de impressão 3D (ex: bicos, adesivos, peças).</p>
+                            
+                            <form id="add-cons-form" style="margin-top:1.5rem;">
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="cons-name"><i class="fa-solid fa-box" style="color: var(--accent); margin-right: 0.3rem;"></i> Nome do Item</label>
+                                        <input type="text" id="cons-name" placeholder="Ex: Bico de Impressora 0.4, Spray Fixador" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cons-qty"><i class="fa-solid fa-layer-group" style="color: #38bdf8; margin-right: 0.3rem;"></i> Qtd.</label>
+                                        <input type="number" id="cons-qty" min="1" step="0.01" value="1" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label for="cons-price"><i class="fa-solid fa-tag" style="color: #25d366; margin-right: 0.3rem;"></i> Valor Unitário (R$)</label>
+                                        <input type="number" id="cons-price" min="0" step="0.01" placeholder="Ex: 25.90" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cons-link"><i class="fa-solid fa-store" style="color: #3b82f6; margin-right: 0.3rem;"></i> Local / Fornecedor</label>
+                                        <input type="text" id="cons-link" placeholder="Ex: Mercado Livre ou Link">
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                        <i class="fa-solid fa-check"></i> Cadastrar Consumo
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Lista de Consumos 3D -->
+                        <div class="dashboard-panel-card list-panel" id="estoque-panel-cons-list" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
+                                <h3 style="margin:0;"><i class="fa-solid fa-list-ul" style="color: var(--accent);"></i> Lista de Consumos (Impressão 3D)</h3>
+                                <button type="button" class="btn btn-primary" id="btn-quick-add-cons" style="font-size: 0.82rem; padding: 0.4rem 0.9rem;">
+                                    <i class="fa-solid fa-plus"></i> Novo Consumo
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome do Item</th>
+                                            <th style="text-align:center;">Qtd.</th>
+                                            <th style="text-align:center;">Valor Unit.</th>
+                                            <th style="text-align:center;">Fornecedor</th>
+                                            <th style="text-align:right;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cons-table-body">
+                                        <!-- Dynamic -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+<!-- TAB CONTENT: SITE (CMS) -->
+                <div class="tab-content" id="tab-site">
+                    <div class="dashboard-grid">
+                        <!-- Formulário de Postagem -->
+                        <div class="dashboard-panel-card">
+                            <h3>Nova Postagem (Galeria do Site)</h3>
+                            <form id="add-post-form" style="margin-top:1.5rem;">
+                                <input type="hidden" id="post-id" value="">
+                                <div class="form-group">
+                                    <label for="post-category">Aba do Site (Categoria)</label>
+                                    <select id="post-category" required>
+                                        <option value="usinagem">Usinagem (Ferramentas)</option>
+                                        <option value="impressao">Impressão 3D</option>
+                                        <option value="projeto">Projeto de Engenharia</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="post-title">Título / Nome</label>
+                                    <input type="text" id="post-title" placeholder="Ex: Peça Técnica em Resina" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="post-desc">Descrição / Detalhes</label>
+                                    <textarea id="post-desc" rows="4" placeholder="Descreva o produto ou serviço realizado..." required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="post-img-upload">Imagem (Obrigatório)</label>
+                                    <input type="file" id="post-img-upload" accept="image/*" style="display: block; margin-top: 0.5rem; background: var(--bg-primary); padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-sm); width: 100%;">
+                                    <input type="hidden" id="post-img-base64">
+                                    <div id="post-img-preview" style="margin-top: 1rem; width: 100%; max-height: 200px; display: none; object-fit: contain; border: 1px solid var(--border); border-radius: 4px;"></div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-full">
+                                    <i class="fa-solid fa-earth-americas"></i>
+                                    <span>Publicar no Site</span>
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Tabela de Controle de Posts -->
+                        <div class="dashboard-panel-card list-panel">
+                            <h3>Conteúdo Publicado</h3>
+                            <div class="inventory-table-wrap" style="margin-top:1.5rem;">
+                                <table class="inventory-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Img</th>
+                                            <th>Título & Categoria</th>
+                                            <th style="text-align:right;">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="posts-list-tbody">
                                         <!-- Dynamic rows -->
                                     </tbody>
                                 </table>
@@ -417,8 +651,62 @@
                     </div>
                 </div>
 
-                <!-- TAB CONTENT: GERADOR DE ORÇAMENTO -->
-                <div class="tab-content" id="tab-gerador">
+                <!-- TAB CONTENT: FATURAMENTO -->
+                <div class="tab-content" id="tab-faturamento">
+
+                    <!-- Summary Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.2rem; text-align:center;">
+                            <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.4rem;">Total Geral</div>
+                            <div id="fat-total-geral" style="font-size:1.3rem; font-weight:800; color:var(--text-primary);">R$ 0,00</div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid rgba(37,211,102,0.3); border-radius: var(--radius-md); padding: 1.2rem; text-align:center;">
+                            <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.4rem;">Faturado</div>
+                            <div id="fat-total-faturado" style="font-size:1.3rem; font-weight:800; color:#25d366;">R$ 0,00</div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid rgba(249,115,22,0.3); border-radius: var(--radius-md); padding: 1.2rem; text-align:center;">
+                            <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.4rem;">Em Aberto</div>
+                            <div id="fat-total-aberto" style="font-size:1.3rem; font-weight:800; color:var(--accent);">R$ 0,00</div>
+                        </div>
+                        <div style="background: var(--bg-card); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius-md); padding: 1.2rem; text-align:center;">
+                            <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.4rem;">Cancelado</div>
+                            <div id="fat-total-cancelado" style="font-size:1.3rem; font-weight:800; color:#ef4444;">R$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.2rem;">
+                        <button class="billing-filter-btn active" data-filter="TODOS" style="padding: 0.45rem 1rem; border-radius: 100px; border: 1px solid var(--accent); background: var(--accent); color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer;">Todos</button>
+                        <button class="billing-filter-btn" data-filter="EM ABERTO" style="padding: 0.45rem 1rem; border-radius: 100px; border: 1px solid var(--border-hover); background: transparent; color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; cursor: pointer;">Em Aberto</button>
+                        <button class="billing-filter-btn" data-filter="PRODUTO FATURADO" style="padding: 0.45rem 1rem; border-radius: 100px; border: 1px solid var(--border-hover); background: transparent; color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; cursor: pointer;">Faturamento Total</button>
+                        <button class="billing-filter-btn" data-filter="FATURAMENTO PARCIAL" style="padding: 0.45rem 1rem; border-radius: 100px; border: 1px solid var(--border-hover); background: transparent; color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; cursor: pointer;">Faturamento Parcial</button>
+                        <button class="billing-filter-btn" data-filter="CANCELADO" style="padding: 0.45rem 1rem; border-radius: 100px; border: 1px solid var(--border-hover); background: transparent; color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; cursor: pointer;">Cancelado</button>
+                        <button class="billing-filter-btn" data-filter="AGUARDANDO APROVAÇÃO" style="padding: 0.45rem 1rem; border-radius: 100px; border: 1px solid var(--border-hover); background: transparent; color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; cursor: pointer;">Aguardando</button>
+                    </div>
+
+                    <div class="dashboard-panel-card" style="padding: 0;">
+                        <div class="inventory-table-wrap">
+                            <table class="inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nº Orçamento</th>
+                                        <th>Cliente</th>
+                                        <th>Data</th>
+                                        <th style="text-align:right;">Valor Total</th>
+                                        <th style="text-align:center;">Status</th>
+                                        <th style="text-align:right;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="billing-list-tbody">
+                                    <!-- Dynamic rows from admin.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT: ORÇAMENTO -->
+                <div class="tab-content" id="tab-orcamento">
                     <div class="dashboard-grid">
                         <!-- Painel Configuração Geral -->
                         <div class="dashboard-panel-card">
@@ -491,7 +779,7 @@
                                 
                                 <div class="cart-actions-container" style="display: flex; gap: 0.75rem; margin-top:2rem;">
                                     <button type="button" class="btn btn-primary" id="btn-save-budget" style="flex:1;">
-                                        <i class="fa-solid fa-floppy-disk"></i> Salvar no Histórico
+                                        <i class="fa-solid fa-floppy-disk"></i> Salvar no Faturamento
                                     </button>
                                     <button type="button" class="btn btn-ghost" id="btn-print-pdf">
                                         <i class="fa-solid fa-print"></i> Gerar PDF / Imprimir
@@ -577,30 +865,6 @@
                     </div>
                 </div>
 
-                <!-- TAB CONTENT: HISTÓRICO DE ORÇAMENTOS -->
-                <div class="tab-content" id="tab-historico">
-                    <div class="dashboard-panel-card">
-                        <h3>Histórico de Orçamentos Gerados</h3>
-                        <div class="inventory-table-wrap" style="margin-top:1.5rem;">
-                            <table class="inventory-table">
-                                <thead>
-                                    <tr>
-                                        <th>Nº Orçamento</th>
-                                        <th>Cliente</th>
-                                        <th>Data</th>
-                                        <th style="text-align:right;">Valor Total</th>
-                                        <th style="text-align:center;">Status</th>
-                                        <th style="text-align:right;">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="budget-history-tbody">
-                                    <!-- Dynamic budgets list -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </section>
 
@@ -619,8 +883,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
-    <script src="data.js?v=48"></script>
-    <script src="admin.js?v=47"></script>
+    <script src="data.js?v=56"></script>
+    <script src="admin.js?v=56"></script>
     <!-- Partial Billing Modal -->
     <div class="modal-overlay" id="partial-billing-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 10000; padding: 1rem;">
         <div class="dashboard-panel-card" style="width: 100%; max-width: 600px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;">
@@ -657,5 +921,176 @@
         </div>
     </div>
 
+    <!-- Restock / Entrada de Estoque Modal (Ferramentas) -->
+    <div class="modal-overlay" id="restock-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 10000; padding: 1rem;">
+        <div class="dashboard-panel-card" style="width: 100%; max-width: 520px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                <div>
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-boxes-stacked" style="color: var(--accent);"></i> Entrada de Estoque</h3>
+                    <div id="restock-prod-title" style="font-size: 0.85rem; color: var(--accent-light); margin-top: 0.2rem; font-weight: 600;">Produto</div>
+                </div>
+                <button type="button" id="close-restock-modal" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="restock-form" style="padding: 1.2rem 0; display: flex; flex-direction: column; gap: 1.2rem;">
+                <input type="hidden" id="restock-prod-id" value="">
+
+                <!-- Quantidade a Adicionar -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <label for="restock-qty-add" style="margin: 0; font-weight: 700; color: var(--text-primary);">
+                            <i class="fa-solid fa-circle-plus" style="color: #25d366; margin-right: 0.3rem;"></i> Quantidade a Adicionar (+)
+                        </label>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Estoque atual: <strong id="restock-current-stock" style="color: var(--text-primary);">0</strong> un.</span>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <input type="number" id="restock-qty-add" min="1" value="1" required style="flex: 1; padding: 0.6rem; font-size: 1.1rem; font-weight: bold; text-align: center; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary);">
+                        <div style="background: rgba(37, 211, 102, 0.1); border: 1px solid rgba(37, 211, 102, 0.3); border-radius: var(--radius-sm); padding: 0.5rem 0.8rem; font-size: 0.8rem; color: #25d366; font-weight: 700; text-align: center;">
+                            Novo Estoque:<br><span id="restock-preview-total" style="font-size: 1.05rem;">0</span> un.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Valor de Compra (Custo) -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <label for="restock-buy-price" style="margin: 0; font-weight: 700; color: var(--text-primary);">
+                            <i class="fa-solid fa-receipt" style="color: #f59e0b; margin-right: 0.3rem;"></i> Valor de Compra / Custo (R$)
+                        </label>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Custo anterior: <strong id="restock-old-buy-price" style="color: var(--text-primary);">R$ 0,00</strong></span>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 0.5rem 0;">O custo subiu ou caiu nesta compra? Atualize o valor abaixo:</p>
+                    <input type="number" id="restock-buy-price" min="0" step="0.01" required style="width: 100%; padding: 0.5rem; font-size: 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary);">
+                </div>
+
+                <!-- Valor de Venda -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <label for="restock-sell-price" style="margin: 0; font-weight: 700; color: var(--text-primary);">
+                            <i class="fa-solid fa-tag" style="color: #25d366; margin-right: 0.3rem;"></i> Valor de Venda (R$)
+                        </label>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Venda atual: <strong id="restock-old-sell-price" style="color: #25d366;">R$ 0,00</strong></span>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 0.5rem 0;">Deseja aumentar ou diminuir o preço de venda para os clientes?</p>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                        <input type="number" id="restock-sell-price" min="0" step="0.01" required style="flex: 1; padding: 0.5rem; font-size: 1.05rem; font-weight: bold; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: #25d366;">
+                    </div>
+                    <!-- Quick percentage adjust buttons -->
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                        <button type="button" class="btn-quick-adjust" data-percent="5" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">+5%</button>
+                        <button type="button" class="btn-quick-adjust" data-percent="10" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">+10%</button>
+                        <button type="button" class="btn-quick-adjust" data-percent="20" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">+20%</button>
+                        <button type="button" class="btn-quick-adjust" data-percent="-5" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">-5%</button>
+                        <button type="button" class="btn-quick-adjust" data-percent="-10" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">-10%</button>
+                        <button type="button" id="btn-reset-sell-price" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--accent-light); cursor: pointer; margin-left: auto;">Restaurar</button>
+                    </div>
+                </div>
+
+                <!-- Link de Compra (Opcional) -->
+                <div>
+                    <label for="restock-buy-link" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem; display: block;">Link do Fornecedor (Opcional)</label>
+                    <input type="url" id="restock-buy-link" placeholder="https://..." style="width: 100%; padding: 0.5rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary);">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn btn-ghost" id="cancel-restock-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.5rem;"><i class="fa-solid fa-check"></i> Salvar Entrada no Estoque</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Movimentação de Matéria-Prima (Consumir / Guardar Gramas) -->
+    <div class="modal-overlay" id="mp-movement-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 10000; padding: 1rem;">
+        <div class="dashboard-panel-card" style="width: 100%; max-width: 480px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                <div>
+                    <h3 id="mp-movement-title" style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-scale-balanced" style="color: var(--accent);"></i> Movimentar Matéria-Prima</h3>
+                    <div id="mp-movement-subtitle" style="font-size: 0.85rem; color: var(--accent-light); margin-top: 0.2rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">Material</div>
+                </div>
+                <button type="button" id="close-mp-movement-modal" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="mp-movement-form" style="padding: 1.2rem 0; display: flex; flex-direction: column; gap: 1.2rem;">
+                <input type="hidden" id="mp-movement-id" value="">
+                <input type="hidden" id="mp-movement-action" value="consume"> <!-- 'consume' ou 'restock' -->
+
+                <!-- Seleção de Ação: Consumir (-) vs Guardar (+) vs Novo Rolo/Estoque -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 0.4rem;">
+                    <button type="button" id="tab-action-consume" class="btn" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; font-weight: 700; padding: 0.55rem 0.3rem; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <i class="fa-solid fa-minus"></i> Consumir (-)
+                    </button>
+                    <button type="button" id="tab-action-restock" class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); font-weight: 700; padding: 0.55rem 0.3rem; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <i class="fa-solid fa-plus"></i> Guardar (+)
+                    </button>
+                    <button type="button" id="tab-action-newstock" class="btn" style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); font-weight: 700; padding: 0.55rem 0.3rem; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <i class="fa-solid fa-boxes-stacked"></i> + Novo Estoque
+                    </button>
+                </div>
+
+                <!-- Saldo Atual e Prévia do Novo Saldo -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; display: flex; justify-content: space-around; align-items: center; text-align: center;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Saldo Atual</div>
+                        <div id="mp-current-stock-preview" style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary);">0 g</div>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 1.2rem;"><i class="fa-solid fa-arrow-right"></i></div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Novo Saldo</div>
+                        <div id="mp-new-stock-preview" style="font-size: 1.2rem; font-weight: 800; color: #ef4444;">0 g</div>
+                    </div>
+                </div>
+
+                <!-- Campo de Gramas -->
+                <div>
+                    <label for="mp-movement-qty" id="mp-qty-label" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                        Gramas a Consumir (baixa no filamento):
+                    </label>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="number" id="mp-movement-qty" min="1" step="1" value="50" required style="flex: 1; padding: 0.65rem; font-size: 1.2rem; font-weight: bold; text-align: center; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-primary);">
+                        <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-muted);">g</span>
+                    </div>
+
+                    <!-- Atalhos rápidos em gramas -->
+                    <div id="mp-quick-qty-container" style="display: flex; gap: 0.4rem; margin-top: 0.6rem; flex-wrap: wrap;">
+                        <button type="button" class="btn-quick-mp-qty" data-qty="50" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">+50g</button>
+                        <button type="button" class="btn-quick-mp-qty" data-qty="100" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">+100g</button>
+                        <button type="button" class="btn-quick-mp-qty" data-qty="250" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">+250g</button>
+                        <button type="button" class="btn-quick-mp-qty" data-qty="500" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer;">+500g</button>
+                        <button type="button" class="btn-quick-mp-qty" data-qty="1000" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; font-weight: 600; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--accent-light); cursor: pointer;">+1000g (1 Kg)</button>
+                    </div>
+                </div>
+
+                <!-- Campo Novo Valor Pago (Exibido no modo 'Adicionar Novo Estoque') -->
+                <div id="mp-newstock-price-block" style="display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label for="mp-movement-price" style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); margin: 0;">
+                            <i class="fa-solid fa-receipt" style="color: #25d366; margin-right: 0.3rem;"></i> Valor Pago neste Novo Rolo/Lote (R$):
+                        </label>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Valor Atual: <strong id="mp-current-price-preview" style="color: #25d366;">R$ 0,00</strong></span>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">O valor informado substituirá o preço de custo atual por Kg:</p>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span style="font-size: 1rem; font-weight: 700; color: var(--text-muted);">R$</span>
+                        <input type="number" id="mp-movement-price" min="0" step="0.01" placeholder="Ex: 50.00" style="flex: 1; padding: 0.6rem; font-size: 1.1rem; font-weight: bold; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: #25d366;">
+                    </div>
+                    <div id="mp-calculated-price-kg" style="font-size: 0.75rem; color: var(--accent-light); font-weight: 600; margin-top: 0.2rem;"></div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn btn-ghost" id="cancel-mp-movement-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="submit-mp-movement" style="background: #ef4444; border-color: #ef4444; padding: 0.6rem 1.5rem;">
+                        <i class="fa-solid fa-check"></i> <span id="submit-mp-movement-text">Confirmar Baixa</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>
+
+
+
+
+

@@ -1,4 +1,4 @@
-/* ==========================================
+﻿/* ==========================================
    FORJA — Admin Console Script
    ========================================== */
 
@@ -19,9 +19,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('login-view').style.display = 'none';
             document.getElementById('dashboard-view').style.display = 'block';
             
-            // Show PDF preview in sidebar
-            if (loggedOutView) loggedOutView.style.display = 'none';
-            if (loggedInView) loggedInView.style.display = 'block';
+            // Show PDF preview only if orcamento tab is active
+            const isOrcamento = document.querySelector('.tab-btn[data-tab="tab-orcamento"]')?.classList.contains('active');
+            if (isOrcamento) {
+                document.body.classList.remove('admin-no-sidebar');
+                if (loggedOutView) loggedOutView.style.display = 'none';
+                if (loggedInView) loggedInView.style.display = 'block';
+            } else {
+                document.body.classList.add('admin-no-sidebar');
+                if (loggedOutView) loggedOutView.style.display = 'block';
+                if (loggedInView) loggedInView.style.display = 'none';
+            }
             
             // Sync Admin DB Data securely
             const syncOverlay = document.getElementById('sync-loader-overlay');
@@ -70,11 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
-
-    // Firebase Auth Listener
-    window.ForjaDB.setAuthStateListener((user) => {
-        checkAuth(user);
-    });
 
     // --- Login Form ---
     const loginForm = document.getElementById('login-form');
@@ -165,12 +168,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetEl = document.getElementById(targetTab);
             if (targetEl) targetEl.classList.add('active');
 
+            // Hide/Show PDF Sidebar
+            if (targetTab === 'tab-orcamento' || targetTab === 'tab-gerador') {
+                document.body.classList.remove('admin-no-sidebar');
+                if (document.getElementById('sidebar-logged-out-view')) document.getElementById('sidebar-logged-out-view').style.display = 'none';
+                if (document.getElementById('sidebar-logged-in-view')) document.getElementById('sidebar-logged-in-view').style.display = 'block';
+            } else {
+                document.body.classList.add('admin-no-sidebar');
+                if (document.getElementById('sidebar-logged-out-view')) document.getElementById('sidebar-logged-out-view').style.display = 'block';
+                if (document.getElementById('sidebar-logged-in-view')) document.getElementById('sidebar-logged-in-view').style.display = 'none';
+            }
+
             // Refresh data on tab switches
             if (targetTab === 'tab-estoque') {
                 renderDashboard();
             } else if (targetTab === 'tab-clientes') {
                 renderClientsTable();
-            } else if (targetTab === 'tab-historico') {
+            } else if (targetTab === 'tab-faturamento') {
                 renderBudgetsHistory();
             } else if (targetTab === 'tab-gerador') {
                 loadClientsSelects();
@@ -410,6 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelectorAll('.edit-prod-btn').forEach(btn => {
             btn.addEventListener('click', () => {
+                switchEstoqueSubtab('estoque-panel-add', 'subtab-btn-add');
                 const id = btn.getAttribute('data-id');
                 const inventory = window.ForjaDB.getInventory();
                 const p = inventory.find(prod => prod.id === id);
@@ -468,9 +483,47 @@ document.addEventListener('DOMContentLoaded', () => {
             
             addProductForm.reset();
             if (document.getElementById('prod-id')) document.getElementById('prod-id').value = '';
+            switchEstoqueSubtab('estoque-panel-list', 'subtab-btn-list');
             renderDashboard();
         });
     }
+
+    // --- Sub-Tab Estoque Navigation (Ferramentas) ---
+    const switchEstoqueSubtab = (activePanelId, activeBtnId) => {
+        const panels = ['estoque-panel-list', 'estoque-panel-add'];
+        const buttons = ['subtab-btn-list', 'subtab-btn-add'];
+
+        panels.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = (id === activePanelId) ? 'block' : 'none';
+        });
+
+        buttons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                if (id === activeBtnId) {
+                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.color = 'var(--accent)';
+                } else {
+                    btn.style.borderColor = 'var(--border)';
+                    btn.style.color = 'var(--text-secondary)';
+                }
+            }
+        });
+
+        if (activePanelId === 'estoque-panel-list') {
+            if (typeof renderInventoryTable === 'function') renderInventoryTable();
+        }
+    };
+
+    const subtabList = document.getElementById('subtab-btn-list');
+    const subtabAdd = document.getElementById('subtab-btn-add');
+    const btnQuickAdd = document.getElementById('btn-quick-add');
+
+    if (subtabList) subtabList.addEventListener('click', () => switchEstoqueSubtab('estoque-panel-list', 'subtab-btn-list'));
+    if (subtabAdd) subtabAdd.addEventListener('click', () => switchEstoqueSubtab('estoque-panel-add', 'subtab-btn-add'));
+    if (btnQuickAdd) btnQuickAdd.addEventListener('click', () => switchEstoqueSubtab('estoque-panel-add', 'subtab-btn-add'));
+
 
 
     // ==========================================
@@ -709,8 +762,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     </tr>
                 `).join('');
             } else {
+                const isFaturadoProcess = budgetItens.some(i => i.faturadoQty !== undefined);
+
                 let rowsHtml = budgetItens.map(item => {
-                    const rowTotal = item.qty * item.value;
+                    let isStriked = false;
+                    let displayQty = item.qty;
+                    let displayValue = item.value;
+
+                    if (isFaturadoProcess) {
+                        const faturado = item.faturadoQty || 0;
+                        if (faturado === 0) {
+                            isStriked = true;
+                        } else {
+                            displayQty = faturado;
+                        }
+                    }
+
+                    if (item.isBox) {
+                        displayQty = displayQty * 10;
+                        displayValue = item.value / 10;
+                    }
+
+                    const rowTotal = isStriked ? 0 : (displayQty * displayValue);
                     subtotal += rowTotal;
                     
                     let descHtml = `<strong>${item.service}</strong>`;
@@ -721,16 +794,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         descHtml += `<div style="font-size: 0.65rem; color: #555; margin-top: 0.15rem; font-style: italic;">${item.details}</div>`;
                     }
                     
-                    let displayQty = item.qty;
-                    let displayValue = item.value;
-                    
-                    if (item.isBox) {
-                        displayQty = item.qty * 10;
-                        displayValue = item.value / 10;
-                    }
+                    const rowStyle = isStriked ? 'text-decoration: line-through; opacity: 0.5;' : '';
                     
                     return `
-                        <tr>
+                        <tr style="${rowStyle}">
                             <td>${descHtml}</td>
                             <td style="text-align:center; font-size: 0.7rem;">${item.ncm || '-'}</td>
                             <td style="text-align:center;">${displayQty}</td>
@@ -1181,7 +1248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     window.ForjaDB.updateBudgetFull(activeBudgetId, budgetData);
-                    alert("Orçamento atualizado no histórico!");
+                    alert("Orçamento atualizado no faturamento!");
                 }
             } else {
                 // Save new budget
@@ -1192,6 +1259,10 @@ document.addEventListener('DOMContentLoaded', () => {
             initBudgetGenerator();
             document.getElementById('budget-meta-form').reset();
             initBudgetGenerator();
+            
+            // Redirect to Faturamento tab
+            const fatTab = document.querySelector('.tab-btn[data-tab="tab-faturamento"]');
+            if (fatTab) fatTab.click();
         });
     }
 
@@ -1229,11 +1300,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // BUDGET HISTORY (STATUS & LOAD)
     // ==========================================
-    const historyTbody = document.getElementById('budget-history-tbody');
+    const historyTbody = document.getElementById('billing-list-tbody');
 
     const renderBudgetsHistory = () => {
         if (!historyTbody) return;
         const budgets = window.ForjaDB.getBudgets();
+
+        let totalGeral = 0;
+        let totalFaturado = 0;
+        let totalAberto = 0;
+        let totalCancelado = 0;
+
+        budgets.forEach(b => {
+            const v = b.totalValue || 0;
+            totalGeral += v;
+            
+            if (b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO') {
+                totalFaturado += v;
+            } else if (b.status === 'FATURAMENTO PARCIAL') {
+                let partialValue = 0;
+                (b.itens || []).forEach(item => {
+                    const billed = item.faturadoQty || 0;
+                    partialValue += billed * (item.value || 0);
+                });
+                totalFaturado += partialValue;
+                totalCancelado += (v - partialValue);
+            } else if (b.status === 'ORÇAMENTO PERDIDO') {
+                totalCancelado += v;
+            } else {
+                totalAberto += v;
+            }
+        });
+
+        const elGeral = document.getElementById('fat-total-geral');
+        const elFat = document.getElementById('fat-total-faturado');
+        const elAberto = document.getElementById('fat-total-aberto');
+        const elCanc = document.getElementById('fat-total-cancelado');
+
+        const fmtBR = val => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        if (elGeral) elGeral.textContent = fmtBR(totalGeral);
+        if (elFat) elFat.textContent = fmtBR(totalFaturado);
+        if (elAberto) elAberto.textContent = fmtBR(totalAberto);
+        if (elCanc) elCanc.textContent = fmtBR(totalCancelado);
 
         if (budgets.length === 0) {
             historyTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding: 2rem;">Nenhum orçamento gerado ainda.</td></tr>`;
@@ -1740,5 +1849,655 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Remove duplicate initial syncLoad and let Firebase Auth trigger it.
+
+    
+
+    // =========================================================================
+    // RECUPERAÇÃO DA LÓGICA DE IMPRESSÃO 3D (MATÉRIA-PRIMA E CONSUMOS)
+    // =========================================================================
+
+    const fmtG = (g) => (parseFloat(g) || 0).toLocaleString('pt-BR') + ' g';
+    const fmt = (v) => (parseFloat(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    // --- Sub-Tab Impressão 3D Navigation ---
+    const switchMpSubtab = (activePanelId, activeBtnId) => {
+        const panels = ['estoque-panel-mp-list', 'estoque-panel-mp-add', 'estoque-panel-cons-list', 'estoque-panel-cons-add'];
+        const buttons = ['subtab-btn-mp-list', 'subtab-btn-mp-add', 'subtab-btn-cons-list', 'subtab-btn-cons-add'];
+
+        panels.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = (id === activePanelId) ? 'block' : 'none';
+        });
+
+        buttons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                if (id === activeBtnId) {
+                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.color = 'var(--accent)';
+                } else {
+                    btn.style.borderColor = 'var(--border)';
+                    btn.style.color = 'var(--text-secondary)';
+                }
+            }
+        });
+
+        if (activePanelId === 'estoque-panel-mp-list') renderRawMaterialsTable();
+        if (activePanelId === 'estoque-panel-cons-list') renderConsumablesTable();
+    };
+
+    const subtabMpList = document.getElementById('subtab-btn-mp-list');
+    const subtabMpAdd = document.getElementById('subtab-btn-mp-add');
+    const btnQuickAddMp = document.getElementById('btn-quick-add-mp');
+    const subtabConsList = document.getElementById('subtab-btn-cons-list');
+    const subtabConsAdd = document.getElementById('subtab-btn-cons-add');
+    const btnQuickAddCons = document.getElementById('btn-quick-add-cons');
+
+    if (subtabMpList) subtabMpList.addEventListener('click', () => switchMpSubtab('estoque-panel-mp-list', 'subtab-btn-mp-list'));
+    if (subtabMpAdd) subtabMpAdd.addEventListener('click', () => switchMpSubtab('estoque-panel-mp-add', 'subtab-btn-mp-add'));
+    if (btnQuickAddMp) btnQuickAddMp.addEventListener('click', () => switchMpSubtab('estoque-panel-mp-add', 'subtab-btn-mp-add'));
+    if (subtabConsList) subtabConsList.addEventListener('click', () => switchMpSubtab('estoque-panel-cons-list', 'subtab-btn-cons-list'));
+    if (subtabConsAdd) subtabConsAdd.addEventListener('click', () => switchMpSubtab('estoque-panel-cons-add', 'subtab-btn-cons-add'));
+    if (btnQuickAddCons) btnQuickAddCons.addEventListener('click', () => switchMpSubtab('estoque-panel-cons-add', 'subtab-btn-cons-add'));
+
+    const getColorHexFromName = (name) => {
+        if (!name) return '#f97316';
+        const lower = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (lower.includes('preto') || lower.includes('black') || lower.includes('dark')) return '#18181b';
+        if (lower.includes('branco') || lower.includes('white')) return '#ffffff';
+        if (lower.includes('amarelo') || lower.includes('yellow')) return '#eab308';
+        if (lower.includes('vermelho') || lower.includes('red')) return '#ef4444';
+        if (lower.includes('verde militar') || lower.includes('verde escuro') || lower.includes('musgo') || lower.includes('oliva')) return '#15803d';
+        if (lower.includes('verde claro') || lower.includes('lima') || lower.includes('lime')) return '#84cc16';
+        if (lower.includes('verde') || lower.includes('green')) return '#22c55e';
+        if (lower.includes('azul claro') || lower.includes('cyan')) return '#06b6d4';
+        if (lower.includes('azul') || lower.includes('blue')) return '#3b82f6';
+        if (lower.includes('laranja') || lower.includes('orange')) return '#f97316';
+        if (lower.includes('roxo') || lower.includes('purple') || lower.includes('violeta')) return '#a855f7';
+        if (lower.includes('rosa') || lower.includes('pink')) return '#ec4899';
+        if (lower.includes('cinza') || lower.includes('grey') || lower.includes('gray') || lower.includes('prata')) return '#64748b';
+        if (lower.includes('marrom') || lower.includes('brown') || lower.includes('madeira')) return '#78350f';
+        if (lower.includes('ouro') || lower.includes('dourado') || lower.includes('gold')) return '#ca8a04';
+        if (lower.includes('transparente') || lower.includes('clear') || lower.includes('natural')) return '#e2e8f0';
+        return '#f97316';
+    };
+
+    let _mpCurrentGrams = 0;
+    let _mpCurrentPriceKg = 0;
+    const mpMovementModal = document.getElementById('mp-movement-modal');
+    const mpMovementForm = document.getElementById('mp-movement-form');
+    const mpMovementIdInput = document.getElementById('mp-movement-id');
+    const mpMovementActionInput = document.getElementById('mp-movement-action');
+    const mpMovementQtyInput = document.getElementById('mp-movement-qty');
+    const mpMovementPriceContainer = document.getElementById('mp-newstock-price-block');
+    const mpMovementPriceInput = document.getElementById('mp-movement-price');
+    const mpCurrentStockPreview = document.getElementById('mp-current-stock-preview');
+    const mpNewStockPreview = document.getElementById('mp-new-stock-preview');
+    const mpCurrentPricePreview = document.getElementById('mp-current-price-preview');
+    const mpCalculatedPriceKg = document.getElementById('mp-calculated-price-kg');
+    const closeMpModalBtn = document.getElementById('close-mp-movement-modal');
+    const cancelMpModalBtn = document.getElementById('cancel-mp-movement-modal');
+    const mpModalSubmitBtn = document.getElementById('submit-mp-movement');
+
+    const updateMpPreview = () => {
+        if (!mpMovementQtyInput || !mpCurrentStockPreview || !mpNewStockPreview) return;
+        const qty = parseFloat(mpMovementQtyInput.value) || 0;
+        const action = mpMovementActionInput ? mpMovementActionInput.value : 'consume';
+        const isConsume = action === 'consume';
+        const newGrams = isConsume ? Math.max(0, _mpCurrentGrams - qty) : _mpCurrentGrams + qty;
+        
+        mpCurrentStockPreview.textContent = fmtG(_mpCurrentGrams);
+        mpNewStockPreview.textContent = fmtG(newGrams);
+        mpNewStockPreview.style.color = isConsume && newGrams <= 0 ? '#ef4444' : '#22c55e';
+
+        if (mpCurrentPricePreview) mpCurrentPricePreview.textContent = fmt(_mpCurrentPriceKg) + ' / Kg';
+
+        if (mpCalculatedPriceKg && mpMovementPriceInput) {
+            const pricePaid = parseFloat(mpMovementPriceInput.value) || 0;
+            if (pricePaid > 0 && qty > 0) {
+                const equivalentKgPrice = (pricePaid / qty) * 1000;
+                mpCalculatedPriceKg.innerHTML = `<i class="fa-solid fa-calculator"></i> Custo calculado por Kg: <strong>${fmt(equivalentKgPrice)} / Kg</strong> (substituirá o atual)`;
+            } else {
+                mpCalculatedPriceKg.innerHTML = '';
+            }
+        }
+    };
+
+    const setMpModalAction = (action) => {
+        if (!mpMovementActionInput) return;
+        mpMovementActionInput.value = action;
+        const submitSpan = mpModalSubmitBtn ? mpModalSubmitBtn.querySelector('span') : null;
+        
+        const tabConsume = document.getElementById('tab-action-consume');
+        const tabRestock = document.getElementById('tab-action-restock');
+        const tabNewStock = document.getElementById('tab-action-newstock');
+        
+        // Reset tabs
+        if (tabConsume) { tabConsume.style.background = 'transparent'; tabConsume.style.borderColor = 'var(--border)'; tabConsume.style.color = 'var(--text-secondary)'; }
+        if (tabRestock) { tabRestock.style.background = 'transparent'; tabRestock.style.borderColor = 'var(--border)'; tabRestock.style.color = 'var(--text-secondary)'; }
+        if (tabNewStock) { tabNewStock.style.background = 'transparent'; tabNewStock.style.borderColor = 'var(--border)'; tabNewStock.style.color = 'var(--text-secondary)'; }
+
+        if (action === 'consume') {
+            if (tabConsume) { tabConsume.style.background = 'rgba(239, 68, 68, 0.15)'; tabConsume.style.borderColor = '#ef4444'; tabConsume.style.color = '#ef4444'; }
+            if (mpMovementPriceContainer) mpMovementPriceContainer.style.display = 'none';
+            if (mpMovementPriceInput) mpMovementPriceInput.removeAttribute('required');
+            if (submitSpan) submitSpan.textContent = 'Confirmar Consumo';
+            if (mpModalSubmitBtn) { mpModalSubmitBtn.className = 'btn btn-primary'; mpModalSubmitBtn.style.background = '#ef4444'; mpModalSubmitBtn.style.borderColor = '#ef4444'; }
+        } else if (action === 'restock') {
+            if (tabRestock) { tabRestock.style.background = 'rgba(34, 197, 94, 0.15)'; tabRestock.style.borderColor = '#22c55e'; tabRestock.style.color = '#22c55e'; }
+            if (mpMovementPriceContainer) mpMovementPriceContainer.style.display = 'none';
+            if (mpMovementPriceInput) mpMovementPriceInput.removeAttribute('required');
+            if (submitSpan) submitSpan.textContent = 'Guardar Gramas';
+            if (mpModalSubmitBtn) { mpModalSubmitBtn.className = 'btn btn-primary'; mpModalSubmitBtn.style.background = '#22c55e'; mpModalSubmitBtn.style.borderColor = '#22c55e'; }
+        } else if (action === 'newstock') {
+            if (tabNewStock) { tabNewStock.style.background = 'rgba(59, 130, 246, 0.15)'; tabNewStock.style.borderColor = '#3b82f6'; tabNewStock.style.color = '#3b82f6'; }
+            if (mpMovementPriceContainer) mpMovementPriceContainer.style.display = 'block';
+            if (mpMovementPriceInput) mpMovementPriceInput.setAttribute('required', 'true');
+            if (submitSpan) submitSpan.textContent = 'Adicionar Novo Estoque';
+            if (mpModalSubmitBtn) { mpModalSubmitBtn.className = 'btn btn-primary'; mpModalSubmitBtn.style.background = '#3b82f6'; mpModalSubmitBtn.style.borderColor = '#3b82f6'; }
+        }
+        updateMpPreview();
+    };
+
+    const openMpMovementModal = (m, action) => {
+        if (!mpMovementModal) return;
+        _mpCurrentGrams = parseFloat(m.stockGrams) || 0;
+        _mpCurrentPriceKg = parseFloat(m.pricePerKg) || 0;
+        if (mpMovementIdInput) mpMovementIdInput.value = m.id;
+        if (mpMovementQtyInput) mpMovementQtyInput.value = '';
+        if (mpMovementPriceInput) mpMovementPriceInput.value = '';
+
+        const subtitle = document.getElementById('mp-movement-subtitle');
+        if (subtitle) {
+            const rawColor = m.color || 'Desconhecido';
+            const dotColor = m.colorHex || getColorHexFromName(rawColor);
+            subtitle.innerHTML = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${dotColor};border:1px solid rgba(255,255,255,0.4);"></span> ${rawColor.toUpperCase()}`;
+        }
+
+        setMpModalAction(action);
+        mpMovementModal.style.display = 'flex';
+    };
+
+    const closeMpModal = () => {
+        if (mpMovementModal) mpMovementModal.style.display = 'none';
+        if (mpMovementForm) mpMovementForm.reset();
+    };
+
+    if (closeMpModalBtn) closeMpModalBtn.addEventListener('click', closeMpModal);
+    if (cancelMpModalBtn) cancelMpModalBtn.addEventListener('click', closeMpModal);
+    
+    if (mpMovementQtyInput) mpMovementQtyInput.addEventListener('input', updateMpPreview);
+    if (mpMovementPriceInput) mpMovementPriceInput.addEventListener('input', updateMpPreview);
+
+
+    const tabActionConsume = document.getElementById('tab-action-consume');
+    const tabActionRestock = document.getElementById('tab-action-restock');
+    const tabActionNewStock = document.getElementById('tab-action-newstock');
+    
+    if (tabActionConsume) tabActionConsume.addEventListener('click', () => setMpModalAction('consume'));
+    if (tabActionRestock) tabActionRestock.addEventListener('click', () => setMpModalAction('restock'));
+    if (tabActionNewStock) tabActionNewStock.addEventListener('click', () => setMpModalAction('newstock'));
+
+    document.querySelectorAll('.btn-quick-mp-qty').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (mpMovementQtyInput) {
+                mpMovementQtyInput.value = btn.getAttribute('data-qty');
+                updateMpPreview();
+            }
+        });
+    });
+
+    if (mpMovementForm) {
+        mpMovementForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = mpMovementIdInput.value;
+            const action = mpMovementActionInput.value;
+            const qty = parseFloat(mpMovementQtyInput.value);
+            const materials = window.ForjaDB.getRawMaterials3D();
+            const m = materials.find(x => x.id === id);
+            
+            if (!m || isNaN(qty) || qty <= 0) {
+                alert('Informe uma quantidade válida em gramas.');
+                return;
+            }
+
+            let newGrams = parseFloat(m.stockGrams) || 0;
+            let newPriceKg = parseFloat(m.pricePerKg) || 0;
+
+            const tabConsume = document.getElementById('tab-action-consume');
+        const tabRestock = document.getElementById('tab-action-restock');
+        const tabNewStock = document.getElementById('tab-action-newstock');
+        
+        // Reset tabs
+        if (tabConsume) { tabConsume.style.background = 'transparent'; tabConsume.style.borderColor = 'var(--border)'; tabConsume.style.color = 'var(--text-secondary)'; }
+        if (tabRestock) { tabRestock.style.background = 'transparent'; tabRestock.style.borderColor = 'var(--border)'; tabRestock.style.color = 'var(--text-secondary)'; }
+        if (tabNewStock) { tabNewStock.style.background = 'transparent'; tabNewStock.style.borderColor = 'var(--border)'; tabNewStock.style.color = 'var(--text-secondary)'; }
+
+        if (action === 'consume') {
+            if (tabConsume) { tabConsume.style.background = 'rgba(239, 68, 68, 0.15)'; tabConsume.style.borderColor = '#ef4444'; tabConsume.style.color = '#ef4444'; }
+                newGrams = Math.max(0, newGrams - qty);
+            } else if (action === 'restock') {
+            if (tabRestock) { tabRestock.style.background = 'rgba(34, 197, 94, 0.15)'; tabRestock.style.borderColor = '#22c55e'; tabRestock.style.color = '#22c55e'; }
+                newGrams += qty;
+            } else if (action === 'newstock') {
+            if (tabNewStock) { tabNewStock.style.background = 'rgba(59, 130, 246, 0.15)'; tabNewStock.style.borderColor = '#3b82f6'; tabNewStock.style.color = '#3b82f6'; }
+                newGrams += qty;
+                const pricePaid = parseFloat(mpMovementPriceInput.value) || 0;
+                if (pricePaid > 0) {
+                    newPriceKg = (pricePaid / qty) * 1000;
+                }
+            }
+
+            window.ForjaDB.updateRawMaterial3D(id, {
+                stockGrams: newGrams,
+                pricePerKg: newPriceKg
+            });
+
+            closeMpModal();
+            renderRawMaterialsTable();
+            if (typeof renderDashboard === 'function') renderDashboard();
+        });
+    }
+
+    const renderRawMaterialsTable = () => {
+        const tbody = document.getElementById('raw-materials-tbody');
+        if (!tbody) return;
+        const materials = window.ForjaDB.getRawMaterials3D ? window.ForjaDB.getRawMaterials3D() : [];
+
+        if (materials.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">Nenhuma matéria-prima cadastrada.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = materials.map(m => {
+            const grams = parseFloat(m.stockGrams) || 0;
+            const price = parseFloat(m.pricePerKg) || 0;
+            const rawColor = m.color || 'Desconhecido';
+            const dotColor = m.colorHex || getColorHexFromName(rawColor);
+            
+            let buyLinkHtml = `<span style="color:var(--text-muted); font-size:0.75rem;">Não informado</span>`;
+            if (m.buyLink && m.buyLink.trim()) {
+                const linkStr = m.buyLink.trim();
+                const isUrl = /^https?:\/\//i.test(linkStr) || /^www\./i.test(linkStr);
+                const fullUrl = isUrl && /^www\./i.test(linkStr) ? 'https://' + linkStr : linkStr;
+                if (isUrl) {
+                    buyLinkHtml = `<a href="${fullUrl}" target="_blank" class="btn btn-ghost" style="padding: 0.25rem 0.65rem; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; color: #38bdf8; border-color: rgba(56,189,248,0.3);"><i class="fa-solid fa-arrow-up-right-from-square"></i> Fornecedor</a>`;
+                } else {
+                    buyLinkHtml = `<span style="display:inline-flex; align-items:center; gap:0.35rem; padding: 0.25rem 0.65rem; border-radius: 4px; background: var(--bg-card); border: 1px solid var(--border); font-size: 0.82rem; color: var(--text-secondary); font-weight: 500;"><i class="fa-solid fa-store" style="color: var(--accent); font-size: 0.75rem;"></i> ${linkStr}</span>`;
+                }
+            }
+
+            return `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td>
+                        <div style="display:flex; align-items:center; gap:0.65rem;">
+                            <span style="display:inline-block; width:15px; height:15px; border-radius:50%; background:${dotColor}; border:1px solid rgba(255,255,255,0.2);"></span>
+                            <strong style="font-size:0.95rem; color:var(--text-primary); text-transform:uppercase;">${rawColor}</strong>
+                        </div>
+                    </td>
+                    <td style="text-align:center; font-weight:700; color:#25d366; font-size:0.95rem;">
+                        ${fmt(price)} <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">/ Kg</span>
+                    </td>
+                    <td style="text-align:center;">
+                        <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:wrap;">
+                            <span style="font-size:1.05rem; font-weight:800; color:${grams>0?'var(--text-primary)':'#ef4444'};">
+                                ${fmtG(grams)}
+                            </span>
+                            <div style="display:flex; gap:0.3rem;">
+                                <button class="btn-consume-mp" data-id="${m.id}" title="Consumir gramas" style="padding:0.2rem 0.55rem; font-size:0.72rem; border-radius:100px; border:1px solid #ef4444; background:rgba(239,68,68,0.12); color:#ef4444; cursor:pointer; white-space:nowrap;"><i class="fa-solid fa-minus"></i> Consumir</button>
+                                <button class="btn-restock-mp" data-id="${m.id}" title="Guardar mais gramas" style="padding:0.2rem 0.55rem; font-size:0.72rem; border-radius:100px; border:1px solid #22c55e; background:rgba(34,197,94,0.12); color:#22c55e; cursor:pointer; white-space:nowrap;"><i class="fa-solid fa-plus"></i> Guardar</button>
+                                <button class="btn-newstock-mp" data-id="${m.id}" title="Comprei Rolo Novo" style="padding:0.2rem 0.55rem; font-size:0.72rem; border-radius:100px; border:1px solid #3b82f6; background:rgba(59,130,246,0.12); color:#3b82f6; cursor:pointer; white-space:nowrap;"><i class="fa-solid fa-boxes-stacked"></i> Abastecer</button>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align:center;">${buyLinkHtml}</td>
+                    <td style="text-align:right; white-space:nowrap;">
+                        <button class="edit-mp-btn" data-id="${m.id}" title="Editar" style="background:none; border:none; color:#f59e0b; cursor:pointer; font-size:1.05rem; padding:0.4rem; margin-right:0.25rem;"><i class="fa-solid fa-pen"></i></button>
+                        <button class="delete-mp-btn" data-id="${m.id}" title="Excluir" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.4rem;"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.btn-consume-mp').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const m = materials.find(x => x.id === btn.getAttribute('data-id'));
+                if (m) openMpMovementModal(m, 'consume');
+            });
+        });
+
+        document.querySelectorAll('.btn-restock-mp').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const m = materials.find(x => x.id === btn.getAttribute('data-id'));
+                if (m) openMpMovementModal(m, 'restock');
+            });
+        });
+
+        document.querySelectorAll('.btn-newstock-mp').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const m = materials.find(x => x.id === btn.getAttribute('data-id'));
+                if (m) openMpMovementModal(m, 'newstock');
+            });
+        });
+
+        document.querySelectorAll('.delete-mp-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                if (confirm('Tem certeza que deseja excluir esta matéria-prima?')) {
+                    if (window.ForjaDB.deleteRawMaterial3D) window.ForjaDB.deleteRawMaterial3D(id);
+                    renderRawMaterialsTable();
+                    if(typeof renderDashboard === 'function') renderDashboard();
+                }
+            });
+        });
+
+        document.querySelectorAll('.edit-mp-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const m = materials.find(x => x.id === btn.getAttribute('data-id'));
+                if (m) {
+                    const form = document.getElementById('add-raw-material-form');
+                    if (form) {
+                        document.getElementById('rm-id').value = m.id;
+                        document.getElementById('rm-color').value = m.color;
+                        document.getElementById('rm-color-hex').value = m.colorHex || getColorHexFromName(m.color);
+                        document.getElementById('rm-price-kg').value = m.pricePerKg;
+                        
+                        const stockInput = document.getElementById('rm-stock-grams') || document.getElementById('rm-stock-kg');
+                        if (stockInput) stockInput.value = m.stockGrams;
+                        
+                        document.getElementById('rm-buy-link').value = m.buyLink || '';
+                        
+                        const submitBtn = document.getElementById('rm-submit-btn');
+                        if (submitBtn) submitBtn.querySelector('span').textContent = "Atualizar Matéria-Prima";
+                        
+                        const cancelBtn = document.getElementById('rm-cancel-btn');
+                        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+                        
+                        switchMpSubtab('estoque-panel-mp-add', 'subtab-btn-mp-add');
+                    }
+                }
+            });
+        });
+    };
+
+
+    // --- Auto-update Color Picker from Color Name ---
+    const rmColorInput = document.getElementById('rm-color');
+    const rmColorHex = document.getElementById('rm-color-hex');
+    if (rmColorInput && rmColorHex) {
+        rmColorInput.addEventListener('input', (e) => {
+            const name = e.target.value.trim();
+            if (name.length > 2) {
+                const hex = getColorHexFromName(name);
+                if (hex !== '#f97316' || name.toLowerCase().includes('laranja')) {
+                    rmColorHex.value = hex;
+                }
+            }
+        });
+    }
+
+    const rmForm = document.getElementById('add-raw-material-form');
+    if (rmForm) {
+        rmForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('rm-id').value;
+            const color = document.getElementById('rm-color').value.trim();
+            const colorHex = document.getElementById('rm-color-hex').value;
+            const price = parseFloat(document.getElementById('rm-price-kg').value) || 0;
+            
+            const stockInput = document.getElementById('rm-stock-grams') || document.getElementById('rm-stock-kg');
+            let grams = parseFloat(stockInput.value) || 0;
+            if (grams > 0 && grams <= 10) grams = grams * 1000;
+            
+            const link = document.getElementById('rm-buy-link').value.trim();
+
+            if (!color) return alert("Informe a cor!");
+
+            if (id) {
+                window.ForjaDB.updateRawMaterial3D(id, { color, colorHex, pricePerKg: price, stockGrams: grams, buyLink: link });
+                alert(`Matéria-prima "${color}" atualizada!`);
+            } else {
+                window.ForjaDB.addRawMaterial3D({ color, colorHex, pricePerKg: price, stockGrams: grams, buyLink: link });
+                alert(`Matéria-prima "${color}" cadastrada!`);
+            }
+            
+            rmForm.reset();
+            document.getElementById('rm-id').value = '';
+            if (stockInput) stockInput.value = '1000';
+            document.getElementById('rm-color-hex').value = '#18181b';
+            
+            const submitBtn = document.getElementById('rm-submit-btn');
+            if (submitBtn) submitBtn.querySelector('span').textContent = "Salvar Matéria-Prima";
+            const cancelBtn = document.getElementById('rm-cancel-btn');
+            if (cancelBtn) cancelBtn.style.display = 'none';
+
+            renderRawMaterialsTable();
+            if(typeof renderDashboard === 'function') renderDashboard();
+            switchMpSubtab('estoque-panel-mp-list', 'subtab-btn-mp-list');
+        });
+
+        const cancelBtn = document.getElementById('rm-cancel-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                rmForm.reset();
+                document.getElementById('rm-id').value = '';
+                cancelBtn.style.display = 'none';
+                const submitBtn = document.getElementById('rm-submit-btn');
+                if (submitBtn) submitBtn.querySelector('span').textContent = "Salvar Matéria-Prima";
+                switchMpSubtab('estoque-panel-mp-list', 'subtab-btn-mp-list');
+            });
+        }
+    }
+
+    const renderConsumablesTable = () => {
+        const tbody = document.getElementById('cons-table-body');
+        if (!tbody) return;
+        const consumables = window.ForjaDB.getConsumables3d ? window.ForjaDB.getConsumables3d() : [];
+        if (consumables.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">Nenhum consumo cadastrado.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = consumables.map(c => {
+            const price = parseFloat(c.price) || 0;
+            const qty = parseFloat(c.qty) || 1;
+            const total = price * qty;
+            let linkHtml = '<span style="color:var(--text-muted); font-size:0.75rem;">Não informado</span>';
+            if (c.link && c.link.trim()) {
+                const linkStr = c.link.trim();
+                const isUrl = /^https?:\/\//i.test(linkStr) || /^www\./i.test(linkStr);
+                if (isUrl) {
+                    const fullUrl = /^www\./i.test(linkStr) ? 'https://' + linkStr : linkStr;
+                    linkHtml = `<a href="${fullUrl}" target="_blank" class="btn btn-ghost" style="padding: 0.2rem 0.5rem; font-size: 0.72rem; color: #3b82f6;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Acessar</a>`;
+                } else {
+                    linkHtml = `<span style="font-size: 0.8rem; color: var(--text-secondary);"><i class="fa-solid fa-store" style="color: var(--accent); margin-right: 0.3rem;"></i>${linkStr}</span>`;
+                }
+            }
+            return `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td><strong style="color:var(--text-primary); font-size: 0.9rem;">${c.name}</strong></td>
+                    <td style="text-align:center;">${qty}</td>
+                    <td style="text-align:center;">
+                        <div style="font-weight:600; color:#25d366;">${fmt(price)}</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">Total: ${fmt(total)}</div>
+                    </td>
+                    <td style="text-align:center;">${linkHtml}</td>
+                    <td style="text-align:right;">
+                        <button class="delete-cons-btn" data-id="${c.id}" title="Excluir" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.4rem;"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        document.querySelectorAll('.delete-cons-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                if (confirm('Tem certeza que deseja excluir este consumo?')) {
+                    if (window.ForjaDB.deleteConsumable3d) window.ForjaDB.deleteConsumable3d(id);
+                    renderConsumablesTable();
+                    if(typeof renderDashboard === 'function') renderDashboard();
+                }
+            });
+        });
+    };
+
+    const addConsForm = document.getElementById('add-cons-form');
+    if (addConsForm) {
+        addConsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('cons-name').value.trim();
+            const qty = document.getElementById('cons-qty').value;
+            const price = document.getElementById('cons-price').value;
+            const link = document.getElementById('cons-link').value.trim();
+            if (window.ForjaDB.addConsumable3d) window.ForjaDB.addConsumable3d({ name, qty, price, link });
+            alert("Consumo cadastrado com sucesso!");
+            addConsForm.reset();
+            renderConsumablesTable();
+            if(typeof renderDashboard === 'function') renderDashboard();
+            switchMpSubtab('estoque-panel-cons-list', 'subtab-btn-cons-list');
+        });
+    }
+
+    // Adiciona listener para a aba 'tab-impressao3d'
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.getAttribute('data-tab');
+            if (targetTab === 'tab-impressao3d') {
+                renderRawMaterialsTable();
+                renderConsumablesTable();
+            }
+        });
+    });
+
+
+
+
+    // =========================================================================
+    // RECUPERAÇÃO DA GALERIA DO SITE (POSTS / MODELOS)
+    // =========================================================================
+
+    const renderPostsTable = () => {
+        const tbody = document.getElementById('posts-list-tbody');
+        if (!tbody) return;
+        
+        const posts = window.ForjaDB.getPosts ? window.ForjaDB.getPosts() : [];
+        if (posts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">Nenhum modelo/postagem encontrado.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = posts.map(p => {
+            const date = new Date(p.createdAt).toLocaleDateString('pt-BR');
+            return `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td>
+                        <div style="width: 50px; height: 50px; border-radius: 4px; overflow: hidden; background: var(--bg-secondary);">
+                            <img src="${p.image || ''}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src=''; this.style.display='none';">
+                        </div>
+                    </td>
+                    <td><strong style="color:var(--text-primary);">${p.title}</strong></td>
+                    <td><span class="badge" style="background: rgba(56,189,248,0.1); color: #38bdf8;">${p.category}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">${date}</td>
+                    <td style="text-align:right; white-space:nowrap;">
+                        <button class="delete-post-btn" data-id="${p.id}" title="Excluir" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.4rem;">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.delete-post-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                if (confirm('Tem certeza que deseja excluir este modelo/postagem?')) {
+                    if (window.ForjaDB.deletePost) window.ForjaDB.deletePost(id);
+                    renderPostsTable();
+                }
+            });
+        });
+    };
+
+
+    const postImgUpload = document.getElementById('post-img-upload');
+    const postImgBase64 = document.getElementById('post-img-base64');
+    const postImgPreview = document.getElementById('post-img-preview');
+    
+    if (postImgUpload) {
+        postImgUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                if(postImgPreview) postImgPreview.style.display = 'none';
+                if(postImgBase64) postImgBase64.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64 = event.target.result;
+                if(postImgBase64) postImgBase64.value = base64;
+                if(postImgPreview) {
+                    postImgPreview.src = base64;
+                    postImgPreview.style.display = 'block';
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    const addPostForm = document.getElementById('add-post-form');
+    if (addPostForm) {
+        addPostForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('post-title').value.trim();
+            const desc = document.getElementById('post-desc').value.trim();
+            const category = document.getElementById('post-category').value;
+            const image = document.getElementById('post-img-base64').value;
+
+            if (!image) {
+                alert("Por favor, selecione uma imagem para o modelo.");
+                return;
+            }
+
+            if (window.ForjaDB.addPost) {
+                window.ForjaDB.addPost({ title, desc, category, image });
+            }
+            
+            alert("Modelo/Postagem salvo com sucesso!");
+            addPostForm.reset();
+            if(postImgPreview) postImgPreview.style.display = 'none';
+            if(postImgBase64) postImgBase64.value = '';
+            renderPostsTable();
+        });
+    }
+
+    window.ForjaDB.setAuthStateListener((user) => {
+        checkAuth(user);
+    });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
