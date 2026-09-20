@@ -39,78 +39,10 @@ const POSTS_KEY = 'forja_posts';
 const RAW_MATERIALS_KEY = 'forja_raw_materials_3d';
 const CONSUMABLES_KEY = 'forja_consumables_3d';
 
-// Dados Padrão de Orçamentos e Clientes Realizados
-const defaultClients = [
-    {
-        id: 'client-1',
-        name: 'STEMA USINAGEM E SOLDA',
-        address: 'Rua das Indústrias, 450 - Bauru/SP',
-        email: 'contato@stema.com.br',
-        phone: '(14) 99777-8888'
-    },
-    {
-        id: 'client-1784044878255',
-        name: 'Stema Usinagem e Solda',
-        address: 'Av. Joaquim Ferraz de Almeida Prado, 1585',
-        email: 'stema@stemausinagem.com.br',
-        phone: '( 14 ) 99145-4938'
-    }
-];
+// Dados confidenciais são carregados com segurança exclusivamente do Firestore após login admin
+const defaultClients = [];
+const defaultBudgets = [];
 
-const defaultBudgets = [
-    {
-        number: 12001,
-        clientId: 'client-1',
-        clientName: 'STEMA USINAGEM E SOLDA',
-        date: '2026-07-01',
-        deliveryDate: 'Entre 10/07 a 20/07',
-        itens: [
-            {
-                service: 'SPMX07T308 YG02',
-                type: 'tools',
-                value: 45.20,
-                qty: 10,
-                total: 452.00,
-                faturadoQty: 10
-            }
-        ],
-        observations: '',
-        status: 'PRODUTO FATURADO',
-        totalValue: 452.00,
-        stockDeducted: true,
-        vendedor: 'Lucas',
-        validadeDate: '7 dias',
-        paymentCond: 'A combinar',
-        frete: 0
-    },
-    {
-        number: 12005,
-        clientId: 'client-1784044878255',
-        clientName: 'Stema Usinagem e Solda',
-        date: '2026-06-29',
-        deliveryDate: 'Entre 10/07 a 20/07',
-        itens: [
-            {
-                service: 'Bedame 3mm (Deskar)',
-                details: 'TDC300',
-                type: 'tools',
-                value: 580.00,
-                qty: 1,
-                total: 580.00,
-                productId: 'deskar-1784044750684',
-                faturadoQty: 0
-            }
-        ],
-        observations: 'Pedido entregue.',
-        status: 'EM ABERTO',
-        totalValue: 580.00,
-        stockDeducted: false,
-        vendedor: 'Lucas',
-        validadeDate: '7 dias',
-        paymentCond: 'A combinar',
-        frete: 0
-    }
-];
 
 // Cache em Memória
 let cachedData = {
@@ -158,6 +90,16 @@ function loginAdmin(email, password) {
 }
 
 function logoutAdmin() {
+    // Limpar imediatamente dados confidenciais da memória e do LocalStorage
+    cachedData.clients = [];
+    cachedData.budgets = [];
+    cachedData.rawMaterials = [];
+    cachedData.consumables3d = [];
+    localStorage.removeItem(CLIENTS_KEY);
+    localStorage.removeItem(BUDGETS_KEY);
+    localStorage.removeItem(RAW_MATERIALS_KEY);
+    localStorage.removeItem(CONSUMABLES_KEY);
+
     if (isLocalEnv) {
         localStorage.removeItem('forja_local_admin_session');
         if (onAuthStateChangeCallback) {
@@ -190,24 +132,34 @@ function setAuthStateListener(cb) {
     }
 }
 
-// --- Sincronização Pública (Apenas Estoque) ---
+// --- Sincronização Pública (Apenas Produtos, sem Preço de Custo ou Fornecedores) ---
 async function syncLoadPublic() {
     if (!db) {
-        console.warn("Firebase não inicializado. Usando banco local (localStorage).");
-        loadFromLocalStorage();
         return;
     }
     try {
         const invSnap = await db.collection('inventory').get();
         if (!invSnap.empty) {
-            cachedData.inventory = invSnap.docs.map(d => d.data());
+            // Sanitizar dados públicos: NUNCA expor buyPrice, buyLink ou soldCount
+            cachedData.inventory = invSnap.docs.map(d => {
+                const item = d.data();
+                return {
+                    id: item.id,
+                    brand: item.brand || '',
+                    name: item.name || '',
+                    stock: parseInt(item.stock) || 0,
+                    sellPrice: parseFloat(item.sellPrice) || 0,
+                    image: item.image || '',
+                    isBox: !!item.isBox
+                };
+            });
         }
-        console.log("Catálogo carregado da nuvem (Public).");
+        console.log("Catálogo público carregado com proteção ativa.");
     } catch (err) {
-        console.warn("Erro ao carregar catálogo público da nuvem:", err);
-        loadFromLocalStorage();
+        console.warn("Catálogo público:", err.message);
     }
 }
+
 
 // --- Sincronização Privada (Estoque, Clientes, Orçamentos) ---
 async function syncLoadAdmin() {
@@ -318,50 +270,40 @@ function syncSave() {
 }
 
 function loadFromLocalStorage() {
-    const rawBudgets = localStorage.getItem(BUDGETS_KEY);
-    const rawClients = localStorage.getItem(CLIENTS_KEY);
-
     cachedData.inventory = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    cachedData.clients = JSON.parse(rawClients || '[]');
-    cachedData.budgets = JSON.parse(rawBudgets || '[]');
     cachedData.posts = JSON.parse(localStorage.getItem(POSTS_KEY) || '[]');
-    cachedData.rawMaterials = JSON.parse(localStorage.getItem(RAW_MATERIALS_KEY) || '[]');
-    cachedData.consumables3d = JSON.parse(localStorage.getItem(CONSUMABLES_KEY) || '[]');
     cachedData.lastBudgetNum = parseInt(localStorage.getItem(LAST_NUM_KEY) || '12005');
 
-    let hasNew = false;
-    if (!rawBudgets) {
-        defaultBudgets.forEach(dbud => {
-            if (!cachedData.budgets.some(b => b.number === dbud.number)) {
-                cachedData.budgets.push(JSON.parse(JSON.stringify(dbud)));
-                hasNew = true;
-            }
-        });
-    }
-    if (!rawClients) {
-        defaultClients.forEach(dc => {
-            if (!cachedData.clients.some(c => c.id === dc.id || (c.name && c.name.toUpperCase() === dc.name.toUpperCase()))) {
-                cachedData.clients.push(JSON.parse(JSON.stringify(dc)));
-                hasNew = true;
-            }
-        });
+    // Apenas carrega dados confidenciais se estiver autenticado como administrador ou em dev local
+    if (getCurrentUser() || isLocalEnv) {
+        cachedData.clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || '[]');
+        cachedData.budgets = JSON.parse(localStorage.getItem(BUDGETS_KEY) || '[]');
+        cachedData.rawMaterials = JSON.parse(localStorage.getItem(RAW_MATERIALS_KEY) || '[]');
+        cachedData.consumables3d = JSON.parse(localStorage.getItem(CONSUMABLES_KEY) || '[]');
+    } else {
+        cachedData.clients = [];
+        cachedData.budgets = [];
+        cachedData.rawMaterials = [];
+        cachedData.consumables3d = [];
     }
 
     cachedData.lastBudgetNum = Math.max(cachedData.lastBudgetNum || 12001, 12005);
-    if (hasNew) {
-        saveToLocalStorage();
-    }
 }
 
 function saveToLocalStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cachedData.inventory));
-    localStorage.setItem(CLIENTS_KEY, JSON.stringify(cachedData.clients));
-    localStorage.setItem(BUDGETS_KEY, JSON.stringify(cachedData.budgets));
     localStorage.setItem(POSTS_KEY, JSON.stringify(cachedData.posts));
-    localStorage.setItem(RAW_MATERIALS_KEY, JSON.stringify(cachedData.rawMaterials));
-    localStorage.setItem(CONSUMABLES_KEY, JSON.stringify(cachedData.consumables3d));
     localStorage.setItem(LAST_NUM_KEY, cachedData.lastBudgetNum.toString());
+
+    // Proteção: apenas persiste dados privados se estiver autenticado
+    if (getCurrentUser() || isLocalEnv) {
+        localStorage.setItem(CLIENTS_KEY, JSON.stringify(cachedData.clients));
+        localStorage.setItem(BUDGETS_KEY, JSON.stringify(cachedData.budgets));
+        localStorage.setItem(RAW_MATERIALS_KEY, JSON.stringify(cachedData.rawMaterials));
+        localStorage.setItem(CONSUMABLES_KEY, JSON.stringify(cachedData.consumables3d));
+    }
 }
+
 
 // === INVENTORY OPERATIONS ===
 function getInventory() {
@@ -417,12 +359,22 @@ function getAvailableCatalog() {
     const available = inventory.filter(p => parseInt(p.stock) > 0);
     const grouped = {};
     available.forEach(p => {
-        const b = p.brand.toUpperCase();
+        const b = (p.brand || '').toUpperCase();
         if (!grouped[b]) grouped[b] = [];
-        grouped[b].push(p);
+        // Proteção: apenas expor campos públicos para clientes (sem buyPrice, buyLink ou soldCount)
+        grouped[b].push({
+            id: p.id,
+            brand: p.brand || '',
+            name: p.name || '',
+            stock: parseInt(p.stock) || 0,
+            sellPrice: parseFloat(p.sellPrice) || 0,
+            image: p.image || '',
+            isBox: !!p.isBox
+        });
     });
     return grouped;
 }
+
 
 function registerSale(id, qty) {
     const inventory = getInventory();
@@ -464,17 +416,22 @@ function registerQuote(id, qty) {
     }
 }
 
-// === CLIENT OPERATIONS ===
+// === CLIENT OPERATIONS (Protegido por Autenticação) ===
 function getClients() {
+    if (!getCurrentUser() && !isLocalEnv) {
+        return [];
+    }
     return cachedData.clients;
 }
 
 function saveClients(clients) {
+    if (!getCurrentUser() && !isLocalEnv) return;
     cachedData.clients = clients;
     saveToLocalStorage();
 }
 
 function addClient(client) {
+    if (!getCurrentUser() && !isLocalEnv) return null;
     const clients = getClients();
     client.id = `client-${Date.now()}`;
     clients.push(client);
@@ -484,6 +441,7 @@ function addClient(client) {
 }
 
 function deleteClient(id) {
+    if (!getCurrentUser() && !isLocalEnv) return;
     let clients = getClients();
     clients = clients.filter(c => c.id !== id);
     saveClients(clients);
@@ -491,6 +449,7 @@ function deleteClient(id) {
 }
 
 function updateClient(id, updatedFields) {
+    if (!getCurrentUser() && !isLocalEnv) return false;
     const clients = getClients();
     const index = clients.findIndex(c => c.id === id);
     if (index !== -1) {
@@ -502,15 +461,20 @@ function updateClient(id, updatedFields) {
     return false;
 }
 
-// === BUDGET OPERATIONS ===
+// === BUDGET OPERATIONS (Protegido por Autenticação) ===
 function getBudgets() {
+    if (!getCurrentUser() && !isLocalEnv) {
+        return [];
+    }
     return cachedData.budgets;
 }
 
 function saveBudgets(budgets) {
+    if (!getCurrentUser() && !isLocalEnv) return;
     cachedData.budgets = budgets;
     saveToLocalStorage();
 }
+
 
 function getNextBudgetNumber() {
     return cachedData.lastBudgetNum + 1;
@@ -638,8 +602,11 @@ function deletePost(id) {
     if (db && getCurrentUser()) db.collection('posts').doc(id).delete().catch(e => alert('Erro Firebase: ' + e.message));
 }
 
-// === RAW MATERIALS 3D (MP IMPRESSÃO 3D) OPERATIONS ===
+// === RAW MATERIALS 3D (MP IMPRESSÃO 3D) OPERATIONS (Protegido por Autenticação) ===
 function getRawMaterials3D() {
+    if (!getCurrentUser() && !isLocalEnv) {
+        return [];
+    }
     const list = cachedData.rawMaterials || [];
     // Auto-migração para gramas (se o usuário informou 1kg vira 1000g)
     list.forEach(m => {
@@ -653,11 +620,13 @@ function getRawMaterials3D() {
 }
 
 function saveRawMaterials3D(materials) {
+    if (!getCurrentUser() && !isLocalEnv) return;
     cachedData.rawMaterials = materials;
     saveToLocalStorage();
 }
 
 function addRawMaterial3D(material) {
+    if (!getCurrentUser() && !isLocalEnv) return null;
     const materials = getRawMaterials3D();
     material.id = `mp3d-${Date.now()}`;
     material.createdAt = new Date().toISOString();
@@ -685,6 +654,7 @@ function addRawMaterial3D(material) {
 }
 
 function updateRawMaterial3D(id, updatedFields) {
+    if (!getCurrentUser() && !isLocalEnv) return false;
     const materials = getRawMaterials3D();
     const index = materials.findIndex(m => m.id === id);
     if (index !== -1) {
@@ -712,6 +682,7 @@ function updateRawMaterial3D(id, updatedFields) {
 }
 
 function deleteRawMaterial3D(id) {
+    if (!getCurrentUser() && !isLocalEnv) return;
     let materials = getRawMaterials3D();
     materials = materials.filter(m => m.id !== id);
     saveRawMaterials3D(materials);
@@ -720,19 +691,22 @@ function deleteRawMaterial3D(id) {
     }
 }
 
-// === DASHBOARD STATISTICS ===
-
-// === CONSUMABLES 3D OPERATIONS ===
+// === CONSUMABLES 3D OPERATIONS (Protegido por Autenticação) ===
 function getConsumables3d() {
+    if (!getCurrentUser() && !isLocalEnv) {
+        return [];
+    }
     return cachedData.consumables3d || [];
 }
 
 function saveConsumables3d(consumables) {
+    if (!getCurrentUser() && !isLocalEnv) return;
     cachedData.consumables3d = consumables;
     saveToLocalStorage();
 }
 
 function addConsumable3d(c) {
+    if (!getCurrentUser() && !isLocalEnv) return null;
     const list = getConsumables3d();
     c.id = 'cons3d-' + Date.now();
     c.createdAt = new Date().toISOString();
@@ -745,6 +719,7 @@ function addConsumable3d(c) {
 }
 
 function deleteConsumable3d(id) {
+    if (!getCurrentUser() && !isLocalEnv) return;
     let list = getConsumables3d();
     list = list.filter(c => c.id !== id);
     saveConsumables3d(list);
@@ -754,6 +729,7 @@ function deleteConsumable3d(id) {
 }
 
 function updateConsumable3d(id, newData) {
+    if (!getCurrentUser() && !isLocalEnv) return;
     let list = getConsumables3d();
     const idx = list.findIndex(c => c.id === id);
     if (idx !== -1) {
@@ -764,8 +740,22 @@ function updateConsumable3d(id, newData) {
         }
     }
 }
+
+// === DASHBOARD STATISTICS (Protegido por Autenticação) ===
 function getDashboardStats() {
+    if (!getCurrentUser() && !isLocalEnv) {
+        return {
+            totalSpent: 0,
+            totalRevenue: 0,
+            totalProfit: 0,
+            totalCostOfSold: 0,
+            totalStockPotential: 0,
+            topSold: [],
+            topQuoted: []
+        };
+    }
     const inventory = getInventory();
+
     
     let totalSpent = 0;
     let totalRevenue = 0;

@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 🔒 Função que verifica se o usuário está autenticado via Firebase Auth
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // 📦 Catálogo de Ferramentas:
+    // Público pode apenas LER; criação, edição e exclusão restritas ao administrador autenticado
+    match /inventory/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 📰 Posts / Novidades (CMS):
+    // Público pode LER; apenas admin autenticado pode publicar/editar
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 👥 Clientes:
+    // TOTALMENTE CONFIDENCIAL - Somente administrador autenticado pode ler ou gravar
+    match /clients/{clientId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 💰 Orçamentos, Vendas e Faturamento:
+    // TOTALMENTE CONFIDENCIAL - Somente administrador autenticado pode ler ou gravar
+    match /budgets/{budgetId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 🧵 Matéria-Prima 3D (Filamentos, Resinas, Custos por Kg):
+    // TOTALMENTE CONFIDENCIAL - Somente administrador autenticado pode ler ou gravar
+    match /raw_materials_3d/{materialId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 🧪 Consumos 3D e Gastos Avulsos:
+    // TOTALMENTE CONFIDENCIAL - Somente administrador autenticado pode ler ou gravar
+    match /consumables_3d/{consumableId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ⚙️ Configurações Gerais do Sistema:
+    // TOTALMENTE CONFIDENCIAL - Somente administrador autenticado pode ler ou gravar
+    match /config/{configId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
