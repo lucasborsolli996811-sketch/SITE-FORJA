@@ -530,6 +530,7 @@ function deleteBudget(number) {
 function addDirectSale({ productId, productName, qty, sellPrice, buyPrice }) {
     const now = new Date();
     const dateStr = now.toLocaleDateString('pt-BR');
+    const total = parseFloat((qty * sellPrice).toFixed(2));
 
     const budget = {
         clientName: 'VENDA DIRETA',
@@ -539,6 +540,7 @@ function addDirectSale({ productId, productName, qty, sellPrice, buyPrice }) {
         statusDate: now.toISOString(),
         stockDeducted: true,
         directSale: true,
+        totalValue: total,
         frete: 0,
         obs: '',
         payment: [],
@@ -546,12 +548,14 @@ function addDirectSale({ productId, productName, qty, sellPrice, buyPrice }) {
         prazo: '',
         itens: [
             {
+                service: productName,
+                name: productName,
                 type: 'tools',
                 productId: productId,
-                name: productName,
                 qty: qty,
                 faturadoQty: qty,
                 value: sellPrice,
+                total: total,
                 isBox: false
             }
         ]
@@ -562,6 +566,7 @@ function addDirectSale({ productId, productName, qty, sellPrice, buyPrice }) {
     console.log('[VENDA DIRETA] Último orçamento:', cachedData.budgets[cachedData.budgets.length - 1]);
     return num;
 }
+
 
 // === POSTS (CMS) OPERATIONS ===
 function getPosts() {

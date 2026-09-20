@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadClientsSelects();
                     loadToolsSelect();
                     initBudgetGenerator();
+                    renderBudgetsHistory();
                 }).catch(err => {
                     console.error("Erro ao sincronizar admin:", err);
                 }).finally(() => {
@@ -56,8 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadClientsSelects();
                     loadToolsSelect();
                     initBudgetGenerator();
+                    renderBudgetsHistory();
                 });
             }
+
 
         } else {
             document.body.classList.remove('logged-in-admin');
@@ -1331,10 +1334,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // BUDGET HISTORY (STATUS & LOAD)
     // ==========================================
     const historyTbody = document.getElementById('billing-list-tbody');
+    let currentBillingFilter = 'TODOS';
+
+    // Hook up filter buttons
+    document.querySelectorAll('.billing-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.billing-filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'transparent';
+                b.style.borderColor = 'var(--border-hover)';
+                b.style.color = 'var(--text-secondary)';
+            });
+            btn.classList.add('active');
+            btn.style.background = 'var(--accent)';
+            btn.style.borderColor = 'var(--accent)';
+            btn.style.color = '#fff';
+            currentBillingFilter = btn.getAttribute('data-filter') || 'TODOS';
+            renderBudgetsHistory();
+        });
+    });
 
     const renderBudgetsHistory = () => {
         if (!historyTbody) return;
-        const budgets = window.ForjaDB.getBudgets();
+        const budgets = window.ForjaDB.getBudgets() || [];
 
         let totalGeral = 0;
         let totalFaturado = 0;
@@ -1342,7 +1364,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalCancelado = 0;
 
         budgets.forEach(b => {
-            const v = b.totalValue || 0;
+            const v = (b.totalValue !== undefined && b.totalValue !== null && !isNaN(parseFloat(b.totalValue)))
+                ? parseFloat(b.totalValue)
+                : (b.itens || []).reduce((acc, it) => acc + ((parseFloat(it.value) || 0) * (parseFloat(it.qty) || 0)), 0) + (parseFloat(b.frete) || 0);
             totalGeral += v;
             
             if (b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO') {
@@ -1350,12 +1374,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (b.status === 'FATURAMENTO PARCIAL') {
                 let partialValue = 0;
                 (b.itens || []).forEach(item => {
-                    const billed = item.faturadoQty || 0;
-                    partialValue += billed * (item.value || 0);
+                    const billed = item.faturadoQty !== undefined ? item.faturadoQty : 0;
+                    partialValue += billed * (parseFloat(item.value) || 0);
                 });
                 totalFaturado += partialValue;
                 totalCancelado += (v - partialValue);
-            } else if (b.status === 'ORÇAMENTO PERDIDO') {
+            } else if (b.status === 'ORÇAMENTO PERDIDO' || b.status === 'CANCELADO') {
                 totalCancelado += v;
             } else {
                 totalAberto += v;
@@ -1379,28 +1403,50 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        historyTbody.innerHTML = budgets.map(b => {
-            const totalBRL = b.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        // Apply tab filter
+        let filteredBudgets = budgets;
+        if (currentBillingFilter === 'EM ABERTO') {
+            filteredBudgets = budgets.filter(b => b.status === 'EM ABERTO');
+        } else if (currentBillingFilter === 'PRODUTO FATURADO') {
+            filteredBudgets = budgets.filter(b => b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO');
+        } else if (currentBillingFilter === 'FATURAMENTO PARCIAL') {
+            filteredBudgets = budgets.filter(b => b.status === 'FATURAMENTO PARCIAL');
+        } else if (currentBillingFilter === 'CANCELADO') {
+            filteredBudgets = budgets.filter(b => b.status === 'ORÇAMENTO PERDIDO' || b.status === 'CANCELADO');
+        } else if (currentBillingFilter === 'AGUARDANDO APROVAÇÃO') {
+            filteredBudgets = budgets.filter(b => b.status === 'AGUARDANDO APROVAÇÃO' || b.status === 'AGUARDANDO');
+        }
+
+        if (filteredBudgets.length === 0) {
+            historyTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding: 2rem;">Nenhum orçamento encontrado para este filtro.</td></tr>`;
+            return;
+        }
+
+        historyTbody.innerHTML = filteredBudgets.map(b => {
+            const rawVal = (b.totalValue !== undefined && b.totalValue !== null && !isNaN(parseFloat(b.totalValue)))
+                ? parseFloat(b.totalValue)
+                : (b.itens || []).reduce((acc, it) => acc + ((parseFloat(it.value) || 0) * (parseFloat(it.qty) || 0)), 0) + (parseFloat(b.frete) || 0);
+            const totalBRL = rawVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             
             // Safe Date Formatting
-            const datePart = b.date && b.date.includes('T') ? b.date.split('T')[0] : b.date;
-            const dateFormatted = datePart ? datePart.split('-').reverse().join('/') : '-';
+            const datePart = b.date && typeof b.date === 'string' && b.date.includes('T') ? b.date.split('T')[0] : (b.date || '-');
+            const dateFormatted = (typeof datePart === 'string' && datePart.includes('-')) ? datePart.split('-').reverse().join('/') : datePart;
             
             let statusDateLine = '';
             if (b.status === 'PRODUTO FATURADO' || b.status === 'PRODUTO COMPRADO') {
-                const sDate = b.statusDate || b.date;
-                const sDatePart = sDate && sDate.includes('T') ? sDate.split('T')[0] : sDate;
-                const sDateFormatted = sDatePart ? sDatePart.split('-').reverse().join('/') : '-';
+                const sDate = b.statusDate || b.date || '';
+                const sDatePart = sDate && typeof sDate === 'string' && sDate.includes('T') ? sDate.split('T')[0] : sDate;
+                const sDateFormatted = (typeof sDatePart === 'string' && sDatePart.includes('-')) ? sDatePart.split('-').reverse().join('/') : (sDatePart || '-');
                 statusDateLine = `<div style="font-size:0.75rem; color:#25d366; margin-top:0.2rem;" title="Data do Faturamento"><i class="fa-solid fa-circle-check"></i> Faturado: ${sDateFormatted}</div>`;
             } else if (b.status === 'FATURAMENTO PARCIAL') {
-                const sDate = b.statusDate || b.date;
-                const sDatePart = sDate && sDate.includes('T') ? sDate.split('T')[0] : sDate;
-                const sDateFormatted = sDatePart ? sDatePart.split('-').reverse().join('/') : '-';
+                const sDate = b.statusDate || b.date || '';
+                const sDatePart = sDate && typeof sDate === 'string' && sDate.includes('T') ? sDate.split('T')[0] : sDate;
+                const sDateFormatted = (typeof sDatePart === 'string' && sDatePart.includes('-')) ? sDatePart.split('-').reverse().join('/') : (sDatePart || '-');
                 statusDateLine = `<div style="font-size:0.75rem; color:var(--accent); margin-top:0.2rem;" title="Faturamento Parcial"><i class="fa-solid fa-box-open"></i> Parcial: ${sDateFormatted}</div>`;
-            } else if (b.status === 'ORÇAMENTO PERDIDO') {
-                const sDate = b.statusDate || b.date;
-                const sDatePart = sDate && sDate.includes('T') ? sDate.split('T')[0] : sDate;
-                const sDateFormatted = sDatePart ? sDatePart.split('-').reverse().join('/') : '-';
+            } else if (b.status === 'ORÇAMENTO PERDIDO' || b.status === 'CANCELADO') {
+                const sDate = b.statusDate || b.date || '';
+                const sDatePart = sDate && typeof sDate === 'string' && sDate.includes('T') ? sDate.split('T')[0] : sDate;
+                const sDateFormatted = (typeof sDatePart === 'string' && sDatePart.includes('-')) ? sDatePart.split('-').reverse().join('/') : (sDatePart || '-');
                 statusDateLine = `<div style="font-size:0.75rem; color:#ef4444; margin-top:0.2rem;" title="Data do Cancelamento"><i class="fa-solid fa-circle-xmark"></i> Perdido: ${sDateFormatted}</div>`;
             }
 
@@ -1417,10 +1463,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 let partialValue = 0;
                 let partialItems = [];
                 (b.itens || []).forEach(item => {
-                    const billed = item.faturadoQty || 0;
+                    const billed = item.faturadoQty !== undefined ? item.faturadoQty : (isFaturado ? item.qty : 0);
                     if (billed > 0) {
-                        partialValue += billed * (item.value || 0);
-                        partialItems.push(`${billed}x ${item.service}`);
+                        partialValue += billed * (parseFloat(item.value) || 0);
+                        const itemName = item.service || item.name || 'Item';
+                        partialItems.push(`${billed}x ${itemName}`);
                     }
                 });
 
@@ -1438,36 +1485,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
+            const clientDisplay = b.clientName || 'Cliente sem nome';
+            const budgetNum = b.number || '-';
+
             return `
-                <tr data-num="${b.number}">
-                    <td><strong>#${b.number}</strong></td>
-                    <td><strong>${b.clientName}</strong></td>
+                <tr data-num="${budgetNum}">
+                    <td><strong>#${budgetNum}</strong></td>
+                    <td><strong>${clientDisplay}</strong></td>
                     <td>${datesHtml}</td>
                     <td style="text-align:right;">
                         <div style="font-weight:bold; color:var(--text-primary);">${totalBRL}</div>
                         ${partialBillingHtml}
                     </td>
                     <td style="text-align:center;">
-                        <select class="status-select" data-num="${b.number}" ${isFaturado ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:${isFaturado ? 'not-allowed' : 'pointer'}; opacity:${isFaturado ? '0.75' : '1'};">
+                        <select class="status-select" data-num="${budgetNum}" ${isFaturado ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:${isFaturado ? 'not-allowed' : 'pointer'}; opacity:${isFaturado ? '0.75' : '1'};">
                             <option value="EM ABERTO" ${b.status === 'EM ABERTO' ? 'selected' : ''}>EM ABERTO</option>
                             <option value="FATURAMENTO PARCIAL" ${isParcial ? 'selected' : ''} style="color:var(--accent);">PARCIAL</option>
                             <option value="PRODUTO FATURADO" ${isFaturado ? 'selected' : ''} style="color:#25d366;">FATURADO</option>
-                            <option value="ORÇAMENTO PERDIDO" ${b.status === 'ORÇAMENTO PERDIDO' ? 'selected' : ''} style="color:#ef4444;">PERDIDO</option>
+                            <option value="ORÇAMENTO PERDIDO" ${(b.status === 'ORÇAMENTO PERDIDO' || b.status === 'CANCELADO') ? 'selected' : ''} style="color:#ef4444;">PERDIDO</option>
                         </select>
                     </td>
                     <td style="text-align:right; white-space:nowrap;">
                         ${(isFaturado || isParcial) ? `
-                        <button class="revert-budget-btn" data-num="${b.number}" title="Estornar e Liberar Edição" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.85rem; font-weight:600; padding:0.5rem; margin-right:0.25rem; font-family:var(--font-heading);">
+                        <button class="revert-budget-btn" data-num="${budgetNum}" title="Estornar e Liberar Edição" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.85rem; font-weight:600; padding:0.5rem; margin-right:0.25rem; font-family:var(--font-heading);">
                             <i class="fa-solid fa-arrow-rotate-left"></i> Estornar
                         </button>
                         ` : ''}
-                        <button class="load-budget-btn" data-num="${b.number}" title="Abrir no Editor" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
+                        <button class="load-budget-btn" data-num="${budgetNum}" title="Abrir no Editor" style="background:none; border:none; color:var(--accent-light); cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-folder-open"></i> Abrir
                         </button>
-                        <button class="view-pdf-btn" data-num="${b.number}" title="Visualizar PDF" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
+                        <button class="view-pdf-btn" data-num="${budgetNum}" title="Visualizar PDF" style="background:none; border:none; color:#38bdf8; cursor:pointer; font-size:1.05rem; padding:0.5rem; margin-right:0.25rem;">
                             <i class="fa-solid fa-file-pdf"></i>
                         </button>
-                        <button class="delete-budget-btn" data-num="${b.number}" title="Excluir Registro" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.5rem;">
+                        <button class="delete-budget-btn" data-num="${budgetNum}" title="Excluir Registro" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1.05rem; padding:0.5rem;">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </td>
@@ -1477,6 +1527,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         attachHistoryEvents();
     };
+
 
     const attachHistoryEvents = () => {
         // Change Status Dropdown
