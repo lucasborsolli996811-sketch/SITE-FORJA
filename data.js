@@ -802,6 +802,7 @@ function getDashboardStats() {
     });
     
     // Revenue and Profit are calculated purely from actual billed budgets
+    let totalCostOfSold = 0; // Custo dos itens já vendidos
     const budgets = getBudgets();
     console.log('[getDashboardStats] Total orçamentos:', budgets.length, '| FATURADO:', budgets.filter(b => b.status === 'PRODUTO FATURADO').length);
     budgets.forEach(b => {
@@ -825,6 +826,7 @@ function getDashboardStats() {
                             }
                             cost = requiredStock * buyPrice;
                         }
+                        totalCostOfSold += cost;
                         totalProfit += (itemRevenue - cost);
                     } else {
                         // Services and 3D Prints have no inventory cost basis
@@ -834,7 +836,19 @@ function getDashboardStats() {
             });
         }
     });
-    console.log('[getDashboardStats] totalRevenue FINAL:', totalRevenue);
+
+    // Se houver histórico de ferramentas vendidas no catálogo, assegura que o custo reflita
+    let inventorySoldCost = 0;
+    inventory.forEach(p => {
+        const buy = parseFloat(p.buyPrice) || 0;
+        const sold = parseInt(p.soldCount) || 0;
+        inventorySoldCost += (sold * buy);
+    });
+    if (inventorySoldCost > totalCostOfSold) {
+        totalCostOfSold = inventorySoldCost;
+    }
+
+    console.log('[getDashboardStats] totalRevenue FINAL:', totalRevenue, '| totalCostOfSold:', totalCostOfSold);
 
     
     const topSold = [...inventory]
@@ -851,6 +865,7 @@ function getDashboardStats() {
         totalSpent,
         totalRevenue,
         totalProfit,
+        totalCostOfSold,
         totalStockPotential,
         topSold,
         topQuoted

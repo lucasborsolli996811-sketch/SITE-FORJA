@@ -205,11 +205,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const formatBRL = (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
         const metricSpent = document.getElementById('metric-spent');
+        const metricCostSold = document.getElementById('metric-cost-sold');
         const metricRevenue = document.getElementById('metric-revenue');
         const metricProfit = document.getElementById('metric-profit');
         const metricStockPotential = document.getElementById('metric-stock-potential');
 
         if (metricSpent) metricSpent.textContent = formatBRL(stats.totalSpent);
+        if (metricCostSold) metricCostSold.textContent = formatBRL(stats.totalCostOfSold);
         if (metricRevenue) metricRevenue.textContent = formatBRL(stats.totalRevenue);
         if (metricProfit) metricProfit.textContent = formatBRL(stats.totalProfit);
         if (metricStockPotential) metricStockPotential.textContent = formatBRL(stats.totalStockPotential);
