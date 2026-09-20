@@ -1,4 +1,4 @@
-﻿/* ==========================================
+/* ==========================================
    FORJA — Admin Console Script
    ========================================== */
 
@@ -207,10 +207,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const metricSpent = document.getElementById('metric-spent');
         const metricRevenue = document.getElementById('metric-revenue');
         const metricProfit = document.getElementById('metric-profit');
+        const metricStockPotential = document.getElementById('metric-stock-potential');
 
         if (metricSpent) metricSpent.textContent = formatBRL(stats.totalSpent);
         if (metricRevenue) metricRevenue.textContent = formatBRL(stats.totalRevenue);
         if (metricProfit) metricProfit.textContent = formatBRL(stats.totalProfit);
+        if (metricStockPotential) metricStockPotential.textContent = formatBRL(stats.totalStockPotential);
     };
 
     const renderTopLists = () => {
@@ -359,22 +361,48 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.sell-prod-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
-                const qtyStr = prompt("Digite a quantidade vendida:");
+                const inventory = window.ForjaDB.getInventory();
+                const product = inventory.find(p => p.id === id);
+                if (!product) return;
+
+                const qtyStr = prompt(`Venda Direta — ${product.brand} ${product.name}\n\nQuantidade vendida:`);
                 if (qtyStr === null) return;
-                
                 const qty = parseInt(qtyStr) || 0;
-                if (qty <= 0) {
-                    alert("Quantidade inválida!");
-                    return;
+                if (qty <= 0) { alert('Quantidade inválida!'); return; }
+
+                // Sugerir o preço de venda cadastrado, mas permite alterar
+                const defaultPrice = (parseFloat(product.sellPrice) || 0).toFixed(2);
+                const priceStr = prompt(
+                    `Valor de venda por unidade (R$):\n\n(Preço cadastrado: R$ ${defaultPrice})`,
+                    defaultPrice
+                );
+                if (priceStr === null) return;
+                const sellPrice = parseFloat(priceStr.replace(',', '.')) || 0;
+                if (sellPrice <= 0) { alert('Valor de venda inválido!'); return; }
+
+                // Deduz estoque e registra soldCount
+                window.ForjaDB.registerSale(id, qty);
+
+                // Cria registro de venda direta no faturamento
+                try {
+                    if (typeof window.ForjaDB.addDirectSale !== 'function') {
+                        throw new Error('Função addDirectSale não disponível — recarregue a página (Ctrl+Shift+R)');
+                    }
+                    window.ForjaDB.addDirectSale({
+                        productId: product.id,
+                        productName: `${product.brand} ${product.name}`,
+                        qty,
+                        sellPrice,
+                        buyPrice: parseFloat(product.buyPrice) || 0
+                    });
+                    const total = (qty * sellPrice).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    alert(`✅ Venda registrada!\n\n${qty}x ${product.name}\nTotal: ${total}\n\nAdicionado ao Faturamento Total.`);
+                } catch (err) {
+                    alert('⚠️ Erro ao registrar no faturamento: ' + err.message);
+                    console.error(err);
                 }
 
-                const success = window.ForjaDB.registerSale(id, qty);
-                if (success) {
-                    alert("Venda registrada com sucesso!");
-                    renderDashboard();
-                } else {
-                    alert("Estoque insuficiente para registrar esta venda!");
-                }
+                renderDashboard();
             });
         });
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head><link rel="icon" type="image/png" href="Imagem/favicon.png">
     <meta charset="UTF-8">
@@ -244,6 +244,10 @@
                         <div class="metric-card" style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md);">
                             <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Lucro nas Vendas</span>
                             <h2 id="metric-profit" style="font-size:1.8rem; margin-top:0.5rem; color:var(--accent-light);">R$ 0,00</h2>
+                        </div>
+                        <div class="metric-card" style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: var(--radius-md);">
+                            <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Valor em Estoque (Venda)</span>
+                            <h2 id="metric-stock-potential" style="font-size:1.8rem; margin-top:0.5rem; color:#38bdf8;">R$ 0,00</h2>
                         </div>
                     </div>
 
@@ -883,8 +887,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
-    <script src="data.js?v=58"></script>
-    <script src="admin.js?v=56"></script>
+    <script src="data.js?v=63"></script>
+    <script src="admin.js?v=63"></script>
     <!-- Partial Billing Modal -->
     <div class="modal-overlay" id="partial-billing-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 10000; padding: 1rem;">
         <div class="dashboard-panel-card" style="width: 100%; max-width: 600px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;">

@@ -1,4 +1,4 @@
-﻿/* ==========================================
+/* ==========================================
    FORJA — Firebase Cloud Database (Secure Mode)
    ========================================== */
 
@@ -429,19 +429,19 @@ function registerSale(id, qty) {
     const index = inventory.findIndex(p => p.id === id);
     if (index !== -1) {
         const p = inventory[index];
-        const saleQty = Math.min(qty, p.stock);
-        if (saleQty > 0) {
-            p.stock -= saleQty;
-            p.soldCount = (p.soldCount || 0) + saleQty;
-            saveInventory(inventory);
-            if (db && getCurrentUser()) {
-                db.collection('inventory').doc(id).update({
-                    stock: p.stock,
-                    soldCount: p.soldCount
-                });
-            }
-            return true;
+        // Deduz do estoque disponível (até 0)
+        const deductFromStock = Math.min(qty, p.stock);
+        p.stock = Math.max(0, p.stock - deductFromStock);
+        // SoldCount SEMPRE incrementa pelo total da venda (para manter o histórico de despesas correto)
+        p.soldCount = (p.soldCount || 0) + qty;
+        saveInventory(inventory);
+        if (db && getCurrentUser()) {
+            db.collection('inventory').doc(id).update({
+                stock: p.stock,
+                soldCount: p.soldCount
+            });
         }
+        return true;
     }
     return false;
 }
@@ -554,11 +554,49 @@ function updateBudgetFull(number, updatedFields) {
     return false;
 }
 
+
 function deleteBudget(number) {
     let budgets = getBudgets();
     budgets = budgets.filter(b => b.number !== parseInt(number));
     saveBudgets(budgets);
     if (db && getCurrentUser()) db.collection('budgets').doc(number.toString()).delete().catch(e => alert('Erro Firebase: ' + e.message));
+}
+
+// Registra uma venda direta (sem orçamento formal) como um registro faturado
+function addDirectSale({ productId, productName, qty, sellPrice, buyPrice }) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('pt-BR');
+
+    const budget = {
+        clientName: 'VENDA DIRETA',
+        clientId: null,
+        date: dateStr,
+        status: 'PRODUTO FATURADO',
+        statusDate: now.toISOString(),
+        stockDeducted: true,
+        directSale: true,
+        frete: 0,
+        obs: '',
+        payment: [],
+        validade: '',
+        prazo: '',
+        itens: [
+            {
+                type: 'tools',
+                productId: productId,
+                name: productName,
+                qty: qty,
+                faturadoQty: qty,
+                value: sellPrice,
+                isBox: false
+            }
+        ]
+    };
+
+    const num = addBudget(budget);
+    console.log('[VENDA DIRETA] Orçamento criado:', num, '| Orçamentos totais:', cachedData.budgets.length);
+    console.log('[VENDA DIRETA] Último orçamento:', cachedData.budgets[cachedData.budgets.length - 1]);
+    return num;
 }
 
 // === POSTS (CMS) OPERATIONS ===
@@ -732,6 +770,7 @@ function getDashboardStats() {
     let totalSpent = 0;
     let totalRevenue = 0;
     let totalProfit = 0;
+    let totalStockPotential = 0; // Valor de venda de todo o estoque atual
     
     inventory.forEach(p => {
         const buy = parseFloat(p.buyPrice) || 0;
@@ -741,6 +780,9 @@ function getDashboardStats() {
         
         // Gasto em compras is the total value of all stock purchased (sold + in stock)
         totalSpent += (stock + sold) * buy;
+
+        // Valor potencial: se vender tudo que tem em estoque agora
+        totalStockPotential += stock * sell;
     });
 
     // Somar valor da matéria-prima de impressão 3D (filamento/resina) em gramas ao gasto de estoque
@@ -761,6 +803,7 @@ function getDashboardStats() {
     
     // Revenue and Profit are calculated purely from actual billed budgets
     const budgets = getBudgets();
+    console.log('[getDashboardStats] Total orçamentos:', budgets.length, '| FATURADO:', budgets.filter(b => b.status === 'PRODUTO FATURADO').length);
     budgets.forEach(b => {
         if (b.status === 'PRODUTO FATURADO' || b.status === 'FATURAMENTO PARCIAL') {
             (b.itens || []).forEach(item => {
@@ -768,6 +811,7 @@ function getDashboardStats() {
                 
                 if (billed > 0) {
                     const itemRevenue = billed * (parseFloat(item.value) || 0);
+                    console.log('[getDashboardStats] Orç#' + b.number + ' item:', item.name, '| billed:', billed, '| value:', item.value, '| revenue:', itemRevenue);
                     totalRevenue += itemRevenue;
                     
                     if (item.type === 'tools' && item.productId) {
@@ -790,6 +834,8 @@ function getDashboardStats() {
             });
         }
     });
+    console.log('[getDashboardStats] totalRevenue FINAL:', totalRevenue);
+
     
     const topSold = [...inventory]
         .filter(p => p.soldCount > 0)
@@ -805,6 +851,7 @@ function getDashboardStats() {
         totalSpent,
         totalRevenue,
         totalProfit,
+        totalStockPotential,
         topSold,
         topQuoted
     };
@@ -845,6 +892,7 @@ window.ForjaDB = {
     updateBudgetFull,
     deleteBudget,
     getNextBudgetNumber,
+    addDirectSale,
     
     getPosts,
     addPost,
