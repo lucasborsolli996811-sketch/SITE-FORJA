@@ -2154,25 +2154,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabRestock) { tabRestock.style.background = 'transparent'; tabRestock.style.borderColor = 'var(--border)'; tabRestock.style.color = 'var(--text-secondary)'; }
         if (tabNewStock) { tabNewStock.style.background = 'transparent'; tabNewStock.style.borderColor = 'var(--border)'; tabNewStock.style.color = 'var(--text-secondary)'; }
 
+        let updatedCost = undefined;
         if (action === 'consume') {
             if (tabConsume) { tabConsume.style.background = 'rgba(239, 68, 68, 0.15)'; tabConsume.style.borderColor = '#ef4444'; tabConsume.style.color = '#ef4444'; }
-                newGrams = Math.max(0, newGrams - qty);
-            } else if (action === 'restock') {
+            newGrams = Math.max(0, newGrams - qty);
+        } else if (action === 'restock') {
             if (tabRestock) { tabRestock.style.background = 'rgba(34, 197, 94, 0.15)'; tabRestock.style.borderColor = '#22c55e'; tabRestock.style.color = '#22c55e'; }
-                newGrams += qty;
-            } else if (action === 'newstock') {
+            newGrams += qty;
+            const addCost = (qty / 1000) * (parseFloat(m.pricePerKg) || 0);
+            const currentCost = parseFloat(m.totalPurchasedCost) || (parseFloat(m.initialStockGrams || 1000) / 1000 * (parseFloat(m.pricePerKg) || 0));
+            updatedCost = currentCost + addCost;
+        } else if (action === 'newstock') {
             if (tabNewStock) { tabNewStock.style.background = 'rgba(59, 130, 246, 0.15)'; tabNewStock.style.borderColor = '#3b82f6'; tabNewStock.style.color = '#3b82f6'; }
-                newGrams += qty;
-                const pricePaid = parseFloat(mpMovementPriceInput.value) || 0;
-                if (pricePaid > 0) {
-                    newPriceKg = (pricePaid / qty) * 1000;
-                }
+            newGrams += qty;
+            const pricePaid = parseFloat(mpMovementPriceInput.value) || 0;
+            if (pricePaid > 0) {
+                newPriceKg = (pricePaid / qty) * 1000;
             }
+            const addCost = pricePaid > 0 ? pricePaid : (qty / 1000) * (newPriceKg || parseFloat(m.pricePerKg) || 0);
+            const currentCost = parseFloat(m.totalPurchasedCost) || (parseFloat(m.initialStockGrams || 1000) / 1000 * (parseFloat(m.pricePerKg) || 0));
+            updatedCost = currentCost + addCost;
+        }
 
-            window.ForjaDB.updateRawMaterial3D(id, {
-                stockGrams: newGrams,
-                pricePerKg: newPriceKg
-            });
+        const updatePayload = {
+            stockGrams: newGrams,
+            pricePerKg: newPriceKg
+        };
+        if (updatedCost !== undefined) {
+            updatePayload.totalPurchasedCost = updatedCost;
+        }
+
+        window.ForjaDB.updateRawMaterial3D(id, updatePayload);
 
             closeMpModal();
             renderRawMaterialsTable();

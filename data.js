@@ -647,6 +647,8 @@ function addRawMaterial3D(material) {
     }
     material.stockGrams = grams;
     material.stockKg = grams / 1000;
+    material.initialStockGrams = grams;
+    material.totalPurchasedCost = (grams / 1000) * material.pricePerKg;
 
     material.color = (material.color || '').trim();
     material.buyLink = (material.buyLink || '').trim();
@@ -780,12 +782,34 @@ function getDashboardStats() {
         totalStockPotential += stock * sell;
     });
 
-    // Somar valor da matéria-prima de impressão 3D (filamento/resina) em gramas ao gasto de estoque
+    // Somar valor da matéria-prima de impressão 3D (custo integral de compra dos carretéis/insumos adquiridos)
     const rawMaterials = getRawMaterials3D();
     rawMaterials.forEach(rm => {
         const price = parseFloat(rm.pricePerKg) || 0;
-        const grams = parseFloat(rm.stockGrams) || 0;
-        totalSpent += (grams / 1000) * price;
+        let cost = 0;
+        if (rm.totalPurchasedCost !== undefined && parseFloat(rm.totalPurchasedCost) > 0) {
+            cost = parseFloat(rm.totalPurchasedCost);
+        } else if (rm.initialStockGrams !== undefined && parseFloat(rm.initialStockGrams) > 0) {
+            cost = (parseFloat(rm.initialStockGrams) / 1000) * price;
+        } else {
+            // Retrocompatibilidade para carretéis já cadastrados no sistema
+            const currentGrams = parseFloat(rm.stockGrams) || 0;
+            const link = (rm.buyLink || '').toLowerCase();
+            
+            if (link.includes('amostra')) {
+                cost = (currentGrams / 1000) * price;
+            } else if (currentGrams > 1000) {
+                // Carretel maior (ex: 1.2kg)
+                cost = (currentGrams / 1000) * price;
+            } else if (link.includes('criaart') && currentGrams < 100) {
+                // Lote fechado de sobra Criaart
+                cost = price;
+            } else {
+                // Carretel padrão de 1 Kg comprado
+                cost = price;
+            }
+        }
+        totalSpent += cost;
     });
     
         // Somar consumos (impressão 3D e outros gastos avulsos)
