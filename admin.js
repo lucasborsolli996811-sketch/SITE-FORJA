@@ -1502,6 +1502,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td style="text-align:right;">
                         <div style="font-weight:bold; color:var(--text-primary);">${totalBRL}</div>
                         ${partialBillingHtml}
+                        ${(b.consumablesCost && b.consumablesCost > 0) ? `
+                            <div style="font-size:0.75rem; color:#f87171; font-weight:600; margin-top:0.25rem;" title="Custo de consumos 3D deduzido do lucro">
+                                <i class="fa-solid fa-cube"></i> Consumos: -${fmt(b.consumablesCost)}
+                            </div>
+                        ` : ''}
                     </td>
                     <td style="text-align:center;">
                         <select class="status-select" data-num="${budgetNum}" ${isFaturado ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size:0.8rem; font-family:var(--font-body); border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); cursor:${isFaturado ? 'not-allowed' : 'pointer'}; opacity:${isFaturado ? '0.75' : '1'};">
@@ -1534,6 +1539,143 @@ document.addEventListener('DOMContentLoaded', () => {
         attachHistoryEvents();
     };
 
+
+    const prompt3DConsumablesModal = (budget, onConfirm, onCancel) => {
+        const has3D = (budget.itens || []).some(item => item.type === 'impressao' || (item.service && /3d|impress|filamento/i.test(item.service)));
+        if (!has3D) {
+            onConfirm([], 0);
+            return;
+        }
+
+        const modal = document.getElementById('billing-3d-consumables-modal');
+        const subtitle = document.getElementById('billing-3d-budget-subtitle');
+        const tbody = document.getElementById('billing-3d-consumables-tbody');
+        const noMsg = document.getElementById('billing-3d-no-consumables-msg');
+        const totalDisplay = document.getElementById('billing-3d-total-cost');
+        const btnNoCons = document.getElementById('btn-billing-3d-no-consumables');
+        const btnConfirm = document.getElementById('confirm-billing-3d-consumables');
+        const btnCancel = document.getElementById('cancel-billing-3d-modal');
+        const btnClose = document.getElementById('close-billing-3d-modal');
+
+        if (!modal || !tbody) {
+            onConfirm([], 0);
+            return;
+        }
+
+        if (subtitle) subtitle.textContent = `Orçamento #${budget.number}`;
+        const consumables = window.ForjaDB.getConsumables3d ? window.ForjaDB.getConsumables3d() : [];
+
+        if (consumables.length === 0) {
+            if (noMsg) noMsg.style.display = 'block';
+            tbody.innerHTML = '';
+        } else {
+            if (noMsg) noMsg.style.display = 'none';
+            tbody.innerHTML = consumables.map((c, i) => {
+                const stockQty = parseFloat(c.qty) || 0;
+                const price = parseFloat(c.price) || 0;
+                return `
+                    <tr data-id="${c.id}" data-price="${price}">
+                        <td>
+                            <strong style="color:var(--text-primary); font-size:0.9rem;">${c.name}</strong>
+                            ${c.link ? `<div style="font-size:0.7rem; color:var(--text-muted);">${c.link}</div>` : ''}
+                        </td>
+                        <td style="text-align:center; font-weight:600; color:var(--text-secondary);">${stockQty}</td>
+                        <td style="text-align:center; color:#25d366; font-weight:600;">${fmt(price)}</td>
+                        <td style="text-align:center;">
+                            <input type="number" class="cons-used-input" data-price="${price}" min="0" max="${stockQty > 0 ? stockQty : 9999}" step="1" value="0" style="width:100%; padding:0.35rem; text-align:center; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem; font-weight:bold; background:var(--bg-secondary); color:var(--text-primary);">
+                        </td>
+                        <td class="cons-row-total" style="text-align:right; font-weight:700; color:var(--text-primary);">
+                            R$ 0,00
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        const recalcTotal = () => {
+            let sum = 0;
+            tbody.querySelectorAll('tr').forEach(tr => {
+                const input = tr.querySelector('.cons-used-input');
+                const rowTotalEl = tr.querySelector('.cons-row-total');
+                if (input) {
+                    const price = parseFloat(input.getAttribute('data-price')) || 0;
+                    const qty = parseFloat(input.value) || 0;
+                    const rowSum = price * qty;
+                    if (rowTotalEl) rowTotalEl.textContent = fmt(rowSum);
+                    sum += rowSum;
+                }
+            });
+            if (totalDisplay) totalDisplay.textContent = fmt(sum);
+            return sum;
+        };
+
+        tbody.querySelectorAll('.cons-used-input').forEach(inp => {
+            inp.addEventListener('input', recalcTotal);
+        });
+
+        if (totalDisplay) totalDisplay.textContent = fmt(0);
+        modal.style.display = 'flex';
+
+        const closeModal = () => {
+            modal.style.display = 'none';
+        };
+
+        const handleCancel = () => {
+            closeModal();
+            if (typeof onCancel === 'function') onCancel();
+        };
+
+        if (btnCancel) btnCancel.onclick = handleCancel;
+        if (btnClose) btnClose.onclick = handleCancel;
+
+        // "Não utilizei nenhum consumo"
+        if (btnNoCons) {
+            btnNoCons.onclick = () => {
+                closeModal();
+                onConfirm([], 0);
+            };
+        }
+
+        // "Confirmar e Faturar"
+        if (btnConfirm) {
+            btnConfirm.onclick = () => {
+                const used = [];
+                let totalCost = 0;
+                tbody.querySelectorAll('tr').forEach(tr => {
+                    const id = tr.getAttribute('data-id');
+                    const input = tr.querySelector('.cons-used-input');
+                    if (input) {
+                        const qty = parseFloat(input.value) || 0;
+                        const price = parseFloat(input.getAttribute('data-price')) || 0;
+                        if (qty > 0) {
+                            const cObj = consumables.find(x => x.id === id);
+                            const itemCost = qty * price;
+                            totalCost += itemCost;
+                            used.push({
+                                id,
+                                name: cObj ? cObj.name : 'Insumo',
+                                qty,
+                                price,
+                                total: itemCost
+                            });
+
+                            if (cObj) {
+                                const newQty = Math.max(0, (parseFloat(cObj.qty) || 0) - qty);
+                                window.ForjaDB.updateConsumable3d(id, { qty: newQty });
+                            }
+                        }
+                    }
+                });
+
+                if (used.length > 0) {
+                    renderConsumablesTable();
+                }
+
+                closeModal();
+                onConfirm(used, totalCost);
+            };
+        }
+    };
 
     const attachHistoryEvents = () => {
         // Change Status Dropdown
@@ -1674,8 +1816,36 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         });
 
-                        budget.stockDeducted = allFullyBilled ? true : 'partial';
-                        budget.status = allFullyBilled ? 'PRODUTO FATURADO' : 'FATURAMENTO PARCIAL';
+                        if (allFullyBilled) {
+                            modal.style.display = 'none';
+                            prompt3DConsumablesModal(budget, (usedCons, consCost) => {
+                                budget.stockDeducted = true;
+                                budget.status = 'PRODUTO FATURADO';
+                                budget.statusDate = new Date().toISOString();
+                                budget.consumablesUsed = usedCons;
+                                budget.consumablesCost = consCost;
+                                
+                                window.ForjaDB.updateBudgetFull(num, {
+                                    itens: budget.itens,
+                                    stockDeducted: true,
+                                    status: 'PRODUTO FATURADO',
+                                    statusDate: budget.statusDate,
+                                    consumablesUsed: budget.consumablesUsed,
+                                    consumablesCost: budget.consumablesCost
+                                });
+
+                                alert(`Faturamento finalizado! Status: PRODUTO FATURADO`);
+                                renderDashboard();
+                                oldValue = budget.status;
+                                renderBudgetsHistory();
+                            }, () => {
+                                select.value = oldValue;
+                            });
+                            return;
+                        }
+
+                        budget.stockDeducted = 'partial';
+                        budget.status = 'FATURAMENTO PARCIAL';
                         budget.statusDate = new Date().toISOString();
                         
                         window.ForjaDB.updateBudgetFull(num, {
@@ -1736,26 +1906,36 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    // Apply Updates
-                    updates.forEach(upd => {
-                        if (upd.productType === 'tools') {
-                            window.ForjaDB.registerSale(upd.item.productId, upd.requiredStock);
-                        }
-                        upd.item.faturadoQty = (upd.item.faturadoQty || 0) + upd.remaining;
-                    });
+                    prompt3DConsumablesModal(budget, (usedCons, consCost) => {
+                        // Apply Updates
+                        updates.forEach(upd => {
+                            if (upd.productType === 'tools') {
+                                window.ForjaDB.registerSale(upd.item.productId, upd.requiredStock);
+                            }
+                            upd.item.faturadoQty = (upd.item.faturadoQty || 0) + upd.remaining;
+                        });
 
-                    budget.stockDeducted = true;
-                    budget.status = 'PRODUTO FATURADO';
-                    budget.statusDate = new Date().toISOString();
-                    
-                    window.ForjaDB.updateBudgetFull(num, {
-                        itens: budget.itens,
-                        stockDeducted: true,
-                        status: 'PRODUTO FATURADO',
-                        statusDate: budget.statusDate
-                    });
-                    alert(`Orçamento #${num} finalizado! Estoque atualizado no catálogo.`);
-                    renderDashboard(); 
+                        budget.stockDeducted = true;
+                        budget.status = 'PRODUTO FATURADO';
+                        budget.statusDate = new Date().toISOString();
+                        budget.consumablesUsed = usedCons;
+                        budget.consumablesCost = consCost;
+                        
+                        window.ForjaDB.updateBudgetFull(num, {
+                            itens: budget.itens,
+                            stockDeducted: true,
+                            status: 'PRODUTO FATURADO',
+                            statusDate: budget.statusDate,
+                            consumablesUsed: budget.consumablesUsed,
+                            consumablesCost: budget.consumablesCost
+                        });
+                        alert(`Orçamento #${num} finalizado! Faturamento registrado com sucesso.`);
+                        renderDashboard();
+                        oldValue = budget.status;
+                        renderBudgetsHistory();
+                    }, () => {
+                        select.value = oldValue;
+                    }); 
 
                 } else if (!isPurchasingFull && wasPurchased && (newStatus === 'EM ABERTO' || newStatus === 'ORÇAMENTO PERDIDO')) {
                     // Revert stock (returning products back to inventory)
@@ -1857,6 +2037,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             }
                         }
+
+                        // Devolve consumos 3D utilizados
+                        if (b.consumablesUsed && b.consumablesUsed.length > 0) {
+                            const consumables = window.ForjaDB.getConsumables3d ? window.ForjaDB.getConsumables3d() : [];
+                            b.consumablesUsed.forEach(u => {
+                                const cObj = consumables.find(x => x.id === u.id);
+                                if (cObj) {
+                                    const restoredQty = (parseFloat(cObj.qty) || 0) + (parseFloat(u.qty) || 0);
+                                    window.ForjaDB.updateConsumable3d(u.id, { qty: restoredQty });
+                                }
+                            });
+                            renderConsumablesTable();
+                        }
                     }
                     window.ForjaDB.deleteBudget(num);
                     renderBudgetsHistory();
@@ -1869,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.revert-budget-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const num = parseInt(btn.getAttribute('data-num'));
-                if (!confirm(`Tem certeza que deseja estornar o orçamento #${num}? O estoque dos produtos será devolvido ao catálogo e o status voltará para EM ABERTO.`)) {
+                if (!confirm(`Tem certeza que deseja estornar o orçamento #${num}? O estoque dos produtos e insumos será devolvido e o status voltará para EM ABERTO.`)) {
                     return;
                 }
                 
@@ -1901,6 +2094,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Reset faturadoQty
                         item.faturadoQty = 0;
                     }
+
+                    // Devolve consumos 3D utilizados
+                    if (budget.consumablesUsed && budget.consumablesUsed.length > 0) {
+                        const consumables = window.ForjaDB.getConsumables3d ? window.ForjaDB.getConsumables3d() : [];
+                        budget.consumablesUsed.forEach(u => {
+                            const cObj = consumables.find(x => x.id === u.id);
+                            if (cObj) {
+                                const restoredQty = (parseFloat(cObj.qty) || 0) + (parseFloat(u.qty) || 0);
+                                window.ForjaDB.updateConsumable3d(u.id, { qty: restoredQty });
+                            }
+                        });
+                        budget.consumablesUsed = [];
+                        budget.consumablesCost = 0;
+                        renderConsumablesTable();
+                    }
                 }
                 
                 budget.stockDeducted = false;
@@ -1909,7 +2117,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.ForjaDB.updateBudgetFull(num, {
                     stockDeducted: false,
                     status: 'EM ABERTO',
-                    statusDate: null
+                    statusDate: null,
+                    consumablesUsed: [],
+                    consumablesCost: 0
                 });
                 
                 alert(`Orçamento #${num} estornado com sucesso! Agora você pode editá-lo novamente.`);

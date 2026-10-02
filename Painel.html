@@ -894,8 +894,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
-    <script src="data.js?v=69"></script>
-    <script src="admin.js?v=69"></script>
+    <script src="data.js?v=70"></script>
+    <script src="admin.js?v=70"></script>
     <!-- Partial Billing Modal -->
     <div class="modal-overlay" id="partial-billing-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 10000; padding: 1rem;">
         <div class="dashboard-panel-card" style="width: 100%; max-width: 600px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;">
@@ -928,6 +928,64 @@
             <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
                 <button type="button" class="btn btn-ghost" id="cancel-partial-modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="confirm-partial-billing">Confirmar Faturamento</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Apuração de Consumos (Impressão 3D) -->
+    <div class="modal-overlay" id="billing-3d-consumables-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); z-index: 10001; padding: 1rem;">
+        <div class="dashboard-panel-card" style="width: 100%; max-width: 650px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                <div>
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fa-solid fa-cube" style="color: var(--accent);"></i> Consumos Utilizados (Impressão 3D)</h3>
+                    <div id="billing-3d-budget-subtitle" style="font-size: 0.85rem; color: var(--accent-light); margin-top: 0.2rem; font-weight: 600;">Orçamento #0</div>
+                </div>
+                <button type="button" id="close-billing-3d-modal" style="background: transparent; border: none; color: var(--text-muted); font-size: 1.25rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div style="padding: 1.2rem 0; flex: 1; overflow-y: auto;">
+                <p style="margin-top: 0; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
+                    Indique os insumos utilizados para produzir as peças deste orçamento (ex: adesivos, quadros, parafusos, etc.) para calcular o <strong>Lucro Líquido Real</strong>. Se não utilizou nenhum consumo extra, clique em <em>Não utilizei nenhum consumo</em>.
+                </p>
+
+                <div class="inventory-table-wrap">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Item / Insumo</th>
+                                <th style="text-align:center;">Estoque Atual</th>
+                                <th style="text-align:center;">Valor Unit.</th>
+                                <th style="text-align:center; width: 95px;">Qtd. Usada</th>
+                                <th style="text-align:right;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billing-3d-consumables-tbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="billing-3d-no-consumables-msg" style="display: none; text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.85rem;">
+                    Nenhum consumo cadastrado no sistema ainda. Cadastre itens na aba "Consumos (3D)" para apontar custos aqui.
+                </div>
+
+                <!-- Resumo de Custo Total de Consumos -->
+                <div style="margin-top: 1rem; padding: 0.85rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Custo Total de Consumos Deste Serviço:</span>
+                    <span id="billing-3d-total-cost" style="font-size: 1.15rem; font-weight: 800; color: #25d366;">R$ 0,00</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border); flex-wrap: wrap;">
+                <button type="button" class="btn btn-ghost" id="btn-billing-3d-no-consumables" style="color: var(--text-secondary); border-color: var(--border);">
+                    <i class="fa-solid fa-ban" style="margin-right: 0.35rem;"></i> Não utilizei nenhum consumo
+                </button>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button type="button" class="btn btn-ghost" id="cancel-billing-3d-modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="confirm-billing-3d-consumables" style="background: var(--accent); border-color: var(--accent);">
+                        <i class="fa-solid fa-check" style="margin-right: 0.35rem;"></i> Confirmar e Faturar
+                    </button>
+                </div>
             </div>
         </div>
     </div>

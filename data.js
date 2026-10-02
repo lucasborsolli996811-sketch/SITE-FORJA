@@ -845,7 +845,8 @@ function getDashboardStats() {
     });
     
     // Revenue and Profit are calculated purely from actual billed budgets
-    let totalCostOfSold = 0; // Custo dos itens já vendidos
+    let totalToolsCostSold = 0;
+    let total3DConsumablesCost = 0;
     const budgets = getBudgets();
     console.log('[getDashboardStats] Total orçamentos:', budgets.length, '| FATURADO:', budgets.filter(b => b.status === 'PRODUTO FATURADO').length);
     budgets.forEach(b => {
@@ -869,14 +870,21 @@ function getDashboardStats() {
                             }
                             cost = requiredStock * buyPrice;
                         }
-                        totalCostOfSold += cost;
+                        totalToolsCostSold += cost;
                         totalProfit += (itemRevenue - cost);
                     } else {
-                        // Services and 3D Prints have no inventory cost basis
+                        // Services and 3D Prints revenue
                         totalProfit += itemRevenue;
                     }
                 }
             });
+
+            // Deduz custo dos consumos 3D informados na fatura deste orçamento
+            const consCost = parseFloat(b.consumablesCost) || 0;
+            if (consCost > 0) {
+                total3DConsumablesCost += consCost;
+                totalProfit -= consCost;
+            }
         }
     });
 
@@ -887,11 +895,13 @@ function getDashboardStats() {
         const sold = parseInt(p.soldCount) || 0;
         inventorySoldCost += (sold * buy);
     });
-    if (inventorySoldCost > totalCostOfSold) {
-        totalCostOfSold = inventorySoldCost;
+    if (inventorySoldCost > totalToolsCostSold) {
+        totalProfit -= (inventorySoldCost - totalToolsCostSold);
+        totalToolsCostSold = inventorySoldCost;
     }
 
-    console.log('[getDashboardStats] totalRevenue FINAL:', totalRevenue, '| totalCostOfSold:', totalCostOfSold);
+    let totalCostOfSold = totalToolsCostSold + total3DConsumablesCost;
+    console.log('[getDashboardStats] totalRevenue FINAL:', totalRevenue, '| totalCostOfSold:', totalCostOfSold, '| totalProfit:', totalProfit);
 
     
     const topSold = [...inventory]
