@@ -1582,7 +1582,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td style="text-align:center; font-weight:600; color:var(--text-secondary);">${stockQty}</td>
                         <td style="text-align:center; color:#25d366; font-weight:600;">${fmt(price)}</td>
                         <td style="text-align:center;">
-                            <input type="number" class="cons-used-input" data-price="${price}" min="0" max="${stockQty > 0 ? stockQty : 9999}" step="1" value="0" style="width:100%; padding:0.35rem; text-align:center; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem; font-weight:bold; background:var(--bg-secondary); color:var(--text-primary);">
+                            <input type="number" class="cons-used-input" data-price="${price}" min="0" step="1" value="0" style="width:100%; padding:0.35rem; text-align:center; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.9rem; font-weight:bold; background:var(--bg-secondary); color:var(--text-primary);">
                         </td>
                         <td class="cons-row-total" style="text-align:right; font-weight:700; color:var(--text-primary);">
                             R$ 0,00
@@ -1658,18 +1658,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 price,
                                 total: itemCost
                             });
-
-                            if (cObj) {
-                                const newQty = Math.max(0, (parseFloat(cObj.qty) || 0) - qty);
-                                window.ForjaDB.updateConsumable3d(id, { qty: newQty });
-                            }
                         }
                     }
                 });
-
-                if (used.length > 0) {
-                    renderConsumablesTable();
-                }
 
                 closeModal();
                 onConfirm(used, totalCost);
@@ -2037,19 +2028,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             }
                         }
-
-                        // Devolve consumos 3D utilizados
-                        if (b.consumablesUsed && b.consumablesUsed.length > 0) {
-                            const consumables = window.ForjaDB.getConsumables3d ? window.ForjaDB.getConsumables3d() : [];
-                            b.consumablesUsed.forEach(u => {
-                                const cObj = consumables.find(x => x.id === u.id);
-                                if (cObj) {
-                                    const restoredQty = (parseFloat(cObj.qty) || 0) + (parseFloat(u.qty) || 0);
-                                    window.ForjaDB.updateConsumable3d(u.id, { qty: restoredQty });
-                                }
-                            });
-                            renderConsumablesTable();
-                        }
                     }
                     window.ForjaDB.deleteBudget(num);
                     renderBudgetsHistory();
@@ -2062,7 +2040,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.revert-budget-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const num = parseInt(btn.getAttribute('data-num'));
-                if (!confirm(`Tem certeza que deseja estornar o orçamento #${num}? O estoque dos produtos e insumos será devolvido e o status voltará para EM ABERTO.`)) {
+                if (!confirm(`Tem certeza que deseja estornar o orçamento #${num}? O estoque dos produtos será devolvido e o status voltará para EM ABERTO.`)) {
                     return;
                 }
                 
@@ -2095,20 +2073,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         item.faturadoQty = 0;
                     }
 
-                    // Devolve consumos 3D utilizados
-                    if (budget.consumablesUsed && budget.consumablesUsed.length > 0) {
-                        const consumables = window.ForjaDB.getConsumables3d ? window.ForjaDB.getConsumables3d() : [];
-                        budget.consumablesUsed.forEach(u => {
-                            const cObj = consumables.find(x => x.id === u.id);
-                            if (cObj) {
-                                const restoredQty = (parseFloat(cObj.qty) || 0) + (parseFloat(u.qty) || 0);
-                                window.ForjaDB.updateConsumable3d(u.id, { qty: restoredQty });
-                            }
-                        });
-                        budget.consumablesUsed = [];
-                        budget.consumablesCost = 0;
-                        renderConsumablesTable();
-                    }
+                    // Limpa consumos 3D associados ao faturamento
+                    budget.consumablesUsed = [];
+                    budget.consumablesCost = 0;
                 }
                 
                 budget.stockDeducted = false;

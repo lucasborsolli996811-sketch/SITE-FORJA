@@ -894,8 +894,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
-    <script src="data.js?v=70"></script>
-    <script src="admin.js?v=70"></script>
+    <script src="data.js?v=71"></script>
+    <script src="admin.js?v=71"></script>
     <!-- Partial Billing Modal -->
     <div class="modal-overlay" id="partial-billing-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 10000; padding: 1rem;">
         <div class="dashboard-panel-card" style="width: 100%; max-width: 600px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;">
@@ -945,7 +945,7 @@
             
             <div style="padding: 1.2rem 0; flex: 1; overflow-y: auto;">
                 <p style="margin-top: 0; margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5;">
-                    Indique os insumos utilizados para produzir as peças deste orçamento (ex: adesivos, quadros, parafusos, etc.) para calcular o <strong>Lucro Líquido Real</strong>. Se não utilizou nenhum consumo extra, clique em <em>Não utilizei nenhum consumo</em>.
+                    Indique os insumos utilizados para produzir as peças deste orçamento (ex: adesivos, quadros, parafusos, etc.) para calcular o <strong>Lucro Líquido Real (Liso)</strong>. A quantidade cadastrada na sua lista de despesas NÃO será diminuída. Se não utilizou nenhum consumo extra, clique em <em>Não utilizei nenhum consumo</em>.
                 </p>
 
                 <div class="inventory-table-wrap">
@@ -953,7 +953,7 @@
                         <thead>
                             <tr>
                                 <th>Item / Insumo</th>
-                                <th style="text-align:center;">Estoque Atual</th>
+                                <th style="text-align:center;">Qtd. Cadastrada</th>
                                 <th style="text-align:center;">Valor Unit.</th>
                                 <th style="text-align:center; width: 95px;">Qtd. Usada</th>
                                 <th style="text-align:right;">Subtotal</th>
