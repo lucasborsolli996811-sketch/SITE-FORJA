@@ -383,9 +383,10 @@ function getAvailableCatalog() {
             id: p.id,
             brand: p.brand || '',
             name: p.name || '',
+            desc: p.desc || p.description || '',
             stock: parseInt(p.stock) || 0,
             sellPrice: parseFloat(p.sellPrice) || 0,
-            image: p.image || '',
+            image: p.image || p.img || '',
             isBox: !!p.isBox
         });
     });

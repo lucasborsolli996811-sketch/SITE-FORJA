@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <div class="product-info">
                                         <span class="product-brand">${p.brand}</span>
                                         <h3 class="product-name">${p.name}</h3>
-                                        <p class="product-desc">${p.desc}</p>
+                                        ${p.desc ? `<p class="product-desc">${p.desc}</p>` : ''}
                                         <p class="product-stock" style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 1rem;">
                                             Disponível: <strong>${p.stock}</strong> ${p.isBox ? 'caixa(s)' : 'unidade(s)'}
                                         </p>
