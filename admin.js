@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let budgetItens = [];
     let activeBudgetId = null; // To keep track if we are editing/viewing an existing budget
     let editingClientId = null; // To keep track if we are editing an existing client
+    let renderRawMaterialsTable = () => {};
+    let renderConsumablesTable = () => {};
 
     // --- Authentication State ---
     const checkAuth = (user) => {
@@ -43,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadToolsSelect();
                     initBudgetGenerator();
                     renderBudgetsHistory();
+                    if (typeof renderRawMaterialsTable === 'function') renderRawMaterialsTable();
+                    if (typeof renderConsumablesTable === 'function') renderConsumablesTable();
                 }).catch(err => {
                     console.error("Erro ao sincronizar admin:", err);
                 }).finally(() => {
@@ -58,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     loadToolsSelect();
                     initBudgetGenerator();
                     renderBudgetsHistory();
+                    if (typeof renderRawMaterialsTable === 'function') renderRawMaterialsTable();
+                    if (typeof renderConsumablesTable === 'function') renderConsumablesTable();
                 });
             }
 
@@ -2192,7 +2198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const renderRawMaterialsTable = () => {
+    renderRawMaterialsTable = () => {
         const tbody = document.getElementById('raw-materials-tbody');
         if (!tbody) return;
         const materials = window.ForjaDB.getRawMaterials3D ? window.ForjaDB.getRawMaterials3D() : [];
@@ -2382,10 +2388,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    const renderConsumablesTable = () => {
+    renderConsumablesTable = () => {
         const tbody = document.getElementById('cons-table-body');
+        const badge = document.getElementById('cons-total-badge');
         if (!tbody) return;
         const consumables = window.ForjaDB.getConsumables3d ? window.ForjaDB.getConsumables3d() : [];
+        
+        let totalAll = 0;
+        consumables.forEach(c => {
+            totalAll += (parseFloat(c.price) || 0) * (parseFloat(c.qty) || 1);
+        });
+        if (badge) badge.textContent = `Total: ${fmt(totalAll)}`;
+
         if (consumables.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-muted);">Nenhum consumo cadastrado.</td></tr>';
             return;

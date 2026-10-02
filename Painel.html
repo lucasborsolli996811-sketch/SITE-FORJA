@@ -516,7 +516,10 @@
                         <!-- Lista de Consumos 3D -->
                         <div class="dashboard-panel-card list-panel" id="estoque-panel-cons-list" style="display: none;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;">
-                                <h3 style="margin:0;"><i class="fa-solid fa-list-ul" style="color: var(--accent);"></i> Lista de Consumos (Impressão 3D)</h3>
+                                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                                    <h3 style="margin:0;"><i class="fa-solid fa-list-ul" style="color: var(--accent);"></i> Lista de Consumos (Impressão 3D)</h3>
+                                    <span id="cons-total-badge" style="font-size: 0.85rem; font-weight: bold; color: #25d366; background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.3); padding: 0.25rem 0.65rem; border-radius: 20px;">Total: R$ 0,00</span>
+                                </div>
                                 <button type="button" class="btn btn-primary" id="btn-quick-add-cons" style="font-size: 0.82rem; padding: 0.4rem 0.9rem;">
                                     <i class="fa-solid fa-plus"></i> Novo Consumo
                                 </button>
@@ -891,8 +894,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
-    <script src="data.js?v=67"></script>
-    <script src="admin.js?v=67"></script>
+    <script src="data.js?v=69"></script>
+    <script src="admin.js?v=69"></script>
     <!-- Partial Billing Modal -->
     <div class="modal-overlay" id="partial-billing-modal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); z-index: 10000; padding: 1rem;">
         <div class="dashboard-panel-card" style="width: 100%; max-width: 600px; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column;">

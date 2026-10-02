@@ -182,12 +182,13 @@ async function syncLoadAdmin() {
 
     try {
         // Carregamento paralelo simultâneo ultra-rápido de todas as coleções
-        const [invSnap, cliSnap, budSnap, postsSnap, rawSnap, confSnap] = await Promise.all([
+        const [invSnap, cliSnap, budSnap, postsSnap, rawSnap, consSnap, confSnap] = await Promise.all([
             db.collection('inventory').get(),
             db.collection('clients').get(),
             db.collection('budgets').get(),
             db.collection('posts').get(),
             db.collection('raw_materials_3d').get(),
+            db.collection('consumables_3d').get(),
             db.collection('config').doc('main').get()
         ]);
 
@@ -216,6 +217,19 @@ async function syncLoadAdmin() {
         if (!rawSnap.empty) {
             cachedData.rawMaterials = rawSnap.docs.map(d => d.data());
             isEmpty = false;
+        }
+
+        if (!consSnap.empty) {
+            cachedData.consumables3d = consSnap.docs.map(d => d.data());
+            isEmpty = false;
+        } else {
+            const localCons = JSON.parse(localStorage.getItem(CONSUMABLES_KEY) || '[]');
+            if (localCons.length > 0) {
+                cachedData.consumables3d = localCons;
+                localCons.forEach(c => {
+                    db.collection('consumables_3d').doc(c.id).set(c).catch(console.error);
+                });
+            }
         }
 
         if (confSnap.exists) {
@@ -265,6 +279,9 @@ function syncSave() {
     });
     cachedData.rawMaterials.forEach(rm => {
         db.collection('raw_materials_3d').doc(rm.id).set(rm);
+    });
+    cachedData.consumables3d.forEach(c => {
+        db.collection('consumables_3d').doc(c.id).set(c);
     });
     db.collection('config').doc('main').set({ lastBudgetNum: cachedData.lastBudgetNum });
 }
@@ -717,10 +734,17 @@ function addConsumable3d(c) {
     const list = getConsumables3d();
     c.id = 'cons3d-' + Date.now();
     c.createdAt = new Date().toISOString();
+    c.qty = parseFloat(c.qty) || 1;
+    c.price = parseFloat(c.price) || 0;
+    c.name = (c.name || '').trim();
+    c.link = (c.link || '').trim();
     list.push(c);
     saveConsumables3d(list);
     if (db && getCurrentUser()) {
-        db.collection('consumables_3d').doc(c.id).set(c).catch(console.error);
+        db.collection('consumables_3d').doc(c.id).set(c).catch(e => {
+            console.error("Erro Firebase consumível:", e);
+            alert("Aviso: Falha ao salvar consumo no Firebase: " + e.message);
+        });
     }
     return c;
 }
