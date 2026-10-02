@@ -147,9 +147,10 @@ async function syncLoadPublic() {
                     id: item.id,
                     brand: item.brand || '',
                     name: item.name || '',
+                    desc: item.desc || item.description || '',
                     stock: parseInt(item.stock) || 0,
                     sellPrice: parseFloat(item.sellPrice) || 0,
-                    image: item.image || '',
+                    image: item.image || item.img || '',
                     isBox: !!item.isBox
                 };
             });
